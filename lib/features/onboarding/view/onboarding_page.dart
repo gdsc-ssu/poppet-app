@@ -62,44 +62,101 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   itemBuilder: (context, index, realIndex) {
                     final item = _items[index];
                     return Column(
+                      mainAxisAlignment:
+                          item.title == null && item.subtitle == null
+                              ? MainAxisAlignment.center
+                              : MainAxisAlignment.start,
                       children: [
-                        Image.asset(item.image, width: 240.w, height: 240.w),
-                        SizedBox(height: 40.h),
-                        item.title != null
-                            ? Text(
-                              item.title!,
-                              style: AppTextStyle.pretendard_24_bold,
-                              textAlign: TextAlign.center,
-                            )
-                            : Container(),
-                        SizedBox(height: 16.h),
-                        item.subtitle != null
-                            ? Text(
-                              item.subtitle!,
-                              style: AppTextStyle.pretendard_18_regular
-                                  .copyWith(
-                                    color: AppColors.darkGrey,
-                                    height: 1.6,
+                        if (item.title == null)
+                          Container(
+                            margin: EdgeInsets.only(left: 21.sp),
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: CustomPaint(
+                                painter: SpeechBubblePainter(),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 30..sp,
+                                    vertical: 28.sp,
                                   ),
-                              textAlign: TextAlign.center,
-                            )
-                            : Container(),
+                                  child: RichText(
+                                    textAlign: TextAlign.center,
+                                    text: TextSpan(
+                                      style: AppTextStyle.pretendard_32_bold
+                                          .copyWith(color: Colors.black),
+                                      text: '할모니~\n안녕하세요!',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (item.title != null)
+                          Text(
+                            item.title!,
+                            style: AppTextStyle.pretendard_32_bold,
+                            textAlign: TextAlign.center,
+                          ),
+                        Image.asset(item.image, width: 366.sp),
+                        SizedBox(height: 10.sp),
+                        if (item.title == null)
+                          Container(
+                            margin: EdgeInsets.only(right: 17.sp),
+                            child: Align(
+                              alignment: Alignment.bottomRight,
+                              child: CustomPaint(
+                                painter: SpeechBubblePainter(),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 30.sp,
+                                    vertical: 30.sp,
+                                  ),
+                                  child: RichText(
+                                    textAlign: TextAlign.center,
+                                    text: TextSpan(
+                                      style: AppTextStyle.pretendard_32_bold
+                                          .copyWith(color: Colors.black),
+                                      children: [
+                                        const TextSpan(text: '저는 '),
+                                        TextSpan(
+                                          text: '뽀삐',
+                                          style: AppTextStyle.pretendard_32_bold
+                                              .copyWith(
+                                                color: AppColors.primary,
+                                              ),
+                                        ),
+                                        TextSpan(
+                                          text: '라고 해요.',
+                                          style:
+                                              AppTextStyle.pretendard_32_bold,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (item.subtitle != null)
+                          Text(
+                            item.subtitle!,
+                            style: AppTextStyle.pretendard_32_bold.copyWith(
+                              color: AppColors.darkGrey,
+                              height: 1.6,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                       ],
                     );
                   },
                   options: CarouselOptions(
-                    height: 600.h,
+                    height: 650.sp,
                     viewportFraction: 1,
                     enableInfiniteScroll: false,
                     onPageChanged: (index, reason) {
                       setState(() {
                         _currentIndex = index;
                       });
-                      if (index == _items.length - 1) {
-                        Future.delayed(const Duration(seconds: 2), () {
-                          context.go('/login');
-                        });
-                      }
                     },
                   ),
                 ),
@@ -130,6 +187,52 @@ class OnboardingItem {
   final String image;
   final String? title;
   final String? subtitle;
+  final String? topBubbleText;
+  final String? bottomBubbleText;
 
-  OnboardingItem({required this.image, this.title, this.subtitle});
+  OnboardingItem({
+    required this.image,
+    this.title,
+    this.subtitle,
+    this.topBubbleText,
+    this.bottomBubbleText,
+  });
+}
+
+// 🎨 Custom Speech Bubble Painter
+class SpeechBubblePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill
+          ..strokeWidth = 2
+          ..strokeJoin = StrokeJoin.round
+          ..strokeCap = StrokeCap.round;
+
+    final borderPaint =
+        Paint()
+          ..color = Colors.black
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2;
+
+    final path = Path();
+    final radiusX = size.width / 2;
+    final radiusY = size.height / 2;
+
+    // 타원형 말풍선
+    path.addRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        Radius.elliptical(radiusX, radiusY),
+      ),
+    );
+
+    canvas.drawPath(path, paint);
+    canvas.drawPath(path, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
