@@ -6,8 +6,14 @@ import '../../core/theme/app_text_style.dart';
 class CustomPopup extends StatelessWidget {
   final String title;
   final Widget child;
+  final Color? titleColor;
 
-  const CustomPopup({super.key, required this.title, required this.child});
+  const CustomPopup({
+    super.key,
+    required this.title,
+    required this.child,
+    this.titleColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +49,7 @@ class CustomPopup extends StatelessWidget {
                     child: Text(
                       title,
                       style: AppTextStyle.pretendard_24_bold.copyWith(
-                        color: AppColors.darkGrey,
+                        color: titleColor ?? AppColors.darkGrey,
                       ),
                     ),
                   ),

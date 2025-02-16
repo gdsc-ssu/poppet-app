@@ -7,6 +7,7 @@ import '../../../core/theme/app_text_style.dart';
 
 import 'privacy_policy_page.dart';
 import 'terms_of_service_page.dart';
+import 'confirmation_popup.dart';
 
 class MyPagePage extends ConsumerWidget {
   const MyPagePage({super.key});
@@ -113,11 +114,39 @@ class MyPagePage extends ConsumerWidget {
             _buildMenuItem(
               title: '로그아웃',
               onTap: () {
-                context.go('/login');
+                showDialog(
+                  context: context,
+                  builder:
+                      (context) => ConfirmationPopup(
+                        title: '로그아웃',
+                        message: '정말 로그아웃하시겠습니까?\n언제든지 다시 로그인할 수 있어요.',
+                        confirmButtonText: '로그아웃',
+                        onConfirm: () => context.go('/'),
+                      ),
+                );
               },
             ),
             SizedBox(height: 24.h),
-            _buildMenuItem(title: '회원탈퇴', onTap: () {}),
+            _buildMenuItem(
+              title: '회원탈퇴',
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder:
+                      (context) => ConfirmationPopup(
+                        title: '회원탈퇴',
+                        message:
+                            '정말 탈퇴하시겠습니까?\n탈퇴 시 계정은 삭제되며,\n데이터는 복구되지 않습니다.',
+                        confirmButtonText: '회원탈퇴',
+                        onConfirm: () {
+                          // TODO: 회원탈퇴 처리 로직 구현
+                          print('회원탈퇴 처리');
+                          context.go('/');
+                        },
+                      ),
+                );
+              },
+            ),
           ],
         ),
       ),

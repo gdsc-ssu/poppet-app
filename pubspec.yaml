@@ -60,6 +60,9 @@ dependencies:
   path_provider: ^2.1.2
   permission_handler: ^11.3.1
 
+  carousel_slider: ^5.0.0
+  smooth_page_indicator: ^1.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -92,6 +95,8 @@ flutter:
     - assets/images/poppet.png
     - assets/images/hamoPoppet.png
     - assets/images/kakao.png
+    - assets/images/poppet2.png
+    - assets/images/basicpopet.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
