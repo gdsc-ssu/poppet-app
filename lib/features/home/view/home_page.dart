@@ -45,7 +45,9 @@ class HomePage extends ConsumerWidget {
               viewModel.isRecording
                   ? '음성을 녹음하고 있어요.\n정지 버튼을 누르면 저장돼요.'
                   : '마이크 버튼을 누르고\n대화를 나눠보세요.',
-              style: AppTextStyle.h2.copyWith(color: AppColors.darkGrey),
+              style: AppTextStyle.pretendard_16_regular.copyWith(
+                color: AppColors.darkGrey,
+              ),
             ),
             SizedBox(height: 24.h),
 
@@ -62,7 +64,7 @@ class HomePage extends ConsumerWidget {
                 children: [
                   Text(
                     viewModel.isRecording ? viewModel.elapsedTime : '녹음 대기 중',
-                    style: AppTextStyle.body1.copyWith(
+                    style: AppTextStyle.pretendard_16_regular.copyWith(
                       color:
                           viewModel.isRecording
                               ? AppColors.accent

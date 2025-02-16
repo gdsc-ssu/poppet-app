@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_style.dart';
 
 class CustomPopup extends StatelessWidget {
   final String title;
@@ -11,13 +12,9 @@ class CustomPopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Container(
-        width: double.infinity,
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.8,
-        ),
+        width: 313.sp,
+        constraints: BoxConstraints(maxHeight: 660.sp),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),
@@ -27,12 +24,7 @@ class CustomPopup extends StatelessWidget {
           children: [
             // Header
             Container(
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: AppColors.lightGrey, width: 1),
-                ),
-              ),
+              padding: EdgeInsets.symmetric(vertical: 24.h),
               child: Stack(
                 children: [
                   // Close button
@@ -50,9 +42,7 @@ class CustomPopup extends StatelessWidget {
                   Center(
                     child: Text(
                       title,
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w600,
+                      style: AppTextStyle.pretendard_24_bold.copyWith(
                         color: AppColors.darkGrey,
                       ),
                     ),

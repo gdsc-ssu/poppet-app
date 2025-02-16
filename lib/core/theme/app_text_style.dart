@@ -5,54 +5,75 @@ class AppTextStyle {
   static const String _fontFamily = 'Pretendard';
 
   // Bold styles (700)
-  static TextStyle h1 = TextStyle(
+  static TextStyle pretendard_32_bold = TextStyle(
     fontFamily: _fontFamily,
     fontSize: 32.sp,
     fontWeight: FontWeight.bold,
-    height: 1.3,
   );
 
-  static TextStyle h2 = TextStyle(
+  static TextStyle pretendard_24_bold = TextStyle(
     fontFamily: _fontFamily,
     fontSize: 24.sp,
     fontWeight: FontWeight.bold,
-    height: 1.3,
   );
 
   // Medium styles (500)
-  static TextStyle h3 = TextStyle(
+  static TextStyle pretendard_24_medium = TextStyle(
     fontFamily: _fontFamily,
     fontSize: 24.sp,
     fontWeight: FontWeight.w500,
-    height: 1.3,
   );
 
-  static TextStyle h4 = TextStyle(
+  static TextStyle pretendard_18_medium = TextStyle(
     fontFamily: _fontFamily,
     fontSize: 18.sp,
     fontWeight: FontWeight.w500,
-    height: 1.3,
   );
 
   // Regular styles (400)
-  static TextStyle body1 = TextStyle(
+  static TextStyle pretendard_18_regular = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 18.sp,
+    fontWeight: FontWeight.w400,
+  );
+  static TextStyle pretendard_16_regular = TextStyle(
     fontFamily: _fontFamily,
     fontSize: 16.sp,
     fontWeight: FontWeight.w400,
-    height: 1.3,
   );
 
-  static TextStyle body2 = TextStyle(
+  static TextStyle pretendard_14_regular = TextStyle(
     fontFamily: _fontFamily,
     fontSize: 14.sp,
     fontWeight: FontWeight.w400,
-    height: 1.3,
   );
 
-  static TextStyle body3 = TextStyle(
-    fontFamily: 'Pretendard-Regular',
-    fontSize: 14.sp,
+  static TextStyle pretendard_12_regular = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 12.sp,
+    fontWeight: FontWeight.w400,
+  );
 
-    height: 1.3,
+  static TextStyle pretendard_18_light = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 18.sp,
+    fontWeight: FontWeight.w300,
+  );
+  static TextStyle pretendard_16_light = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 16.sp,
+    fontWeight: FontWeight.w300,
+  );
+
+  static TextStyle pretendard_14_light = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 14.sp,
+    fontWeight: FontWeight.w300,
+  );
+
+  static TextStyle pretendard_12_light = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 12.sp,
+    fontWeight: FontWeight.w300,
   );
 }
