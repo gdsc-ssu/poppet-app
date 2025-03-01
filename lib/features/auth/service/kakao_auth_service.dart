@@ -22,6 +22,7 @@ class KakaoAuthService {
   Future<bool> signInWithKakao(BuildContext context) async {
     try {
       OAuthToken token;
+
       if (await isKakaoTalkInstalled()) {
         try {
           token = await UserApi.instance.loginWithKakaoTalk();

@@ -142,7 +142,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (error) {
       debugPrint('카카오 로그인 실패: $error');
       state = AuthState.unauthenticated();
-
+      context.go('/home');
       if (error is! PlatformException || error.code != 'CANCELED') {
         if (context.mounted) {
           ScaffoldMessenger.of(

@@ -19,10 +19,19 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        title: Text(
+          'POPPET',
+          style: TextStyle(
+            fontSize: 24.sp,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+            letterSpacing: 1.2,
+          ),
+        ),
         actions: [
           IconButton(
             icon: CircleAvatar(
-              backgroundColor: Colors.grey[200],
+              backgroundColor: Colors.grey[300],
               child: const Icon(
                 Icons.person_outline,
                 color: AppColors.darkGrey,
@@ -35,72 +44,67 @@ class HomePage extends ConsumerWidget {
           SizedBox(width: 16.w),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 24.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 16.h),
-            Text(
-              viewModel.isRecording
-                  ? '음성을 녹음하고 있어요.\n정지 버튼을 누르면 저장돼요.'
-                  : '마이크 버튼을 누르고\n대화를 나눠보세요.',
-              style: AppTextStyle.pretendard_16_regular.copyWith(
+      body: Column(
+        children: [
+          // 상단 텍스트 영역
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+            child: Text(
+              '마이크 버튼을 누르고\n대화를 나눠보세요.',
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w500,
                 color: AppColors.darkGrey,
+                height: 1.4,
               ),
             ),
-            SizedBox(height: 24.h),
+          ),
 
-            Center(
+          // 캐릭터 이미지 영역 (확장 가능하도록 Expanded 사용)
+          Expanded(
+            child: Center(
               child: Image.asset(
-                'assets/images/hamoPoppet.png',
-                width: 200.w,
-                height: 200.h,
+                'assets/images/poppet.png', // 기존 이미지 사용
+                width: 240.w,
               ),
             ),
-            SizedBox(height: 40.h),
-            Center(
-              child: Column(
-                children: [
-                  Text(
-                    viewModel.isRecording ? viewModel.elapsedTime : '녹음 대기 중',
-                    style: AppTextStyle.pretendard_16_regular.copyWith(
-                      color:
-                          viewModel.isRecording
-                              ? AppColors.accent
-                              : AppColors.darkGrey,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  Container(
-                    width: 72.w,
-                    height: 72.w,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color:
-                          viewModel.isRecording
-                              ? AppColors.accent
-                              : AppColors.primary,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => viewModel.toggleRecording(),
-                        customBorder: const CircleBorder(),
-                        child: Icon(
-                          viewModel.isRecording ? Icons.stop : Icons.mic,
-                          color: Colors.white,
-                          size: 32.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+          ),
+
+          // 마이크 버튼 영역
+          Container(
+            width: double.infinity,
+            height: 180.h,
+            decoration: BoxDecoration(
+              color: Color(0xFFF8D3B0), // 연한 살구색
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(40.r),
+                topRight: Radius.circular(40.r),
               ),
             ),
-            SizedBox(height: 100.h),
-          ],
-        ),
+            child: Center(
+              child: GestureDetector(
+                onTap: () => viewModel.toggleRecording(),
+                child: Container(
+                  width: 100.w,
+                  height: 100.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    border: Border.all(color: AppColors.primary, width: 2.w),
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      'assets/images/microphone.png',
+                      width: 50.w,
+                      height: 50.h,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
