@@ -64,7 +64,7 @@ class LoginPage extends ConsumerWidget {
               InkWell(
                 onTap: () {
                   // 카카오 로그인 실행
-                  ref.read(authStateProvider.notifier).loginWithKakao();
+                  ref.read(authStateProvider.notifier).signInWithKakao(context);
                 },
                 child: Container(
                   width: double.infinity,

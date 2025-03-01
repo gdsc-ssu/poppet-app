@@ -64,6 +64,7 @@ dependencies:
   smooth_page_indicator: ^1.2.0
   kakao_flutter_sdk: ^1.9.6
   kakao_flutter_sdk_user: ^1.7.0 # 카카오 로그인 SDK
+  flutter_secure_storage: ^4.2.1
 
 dev_dependencies:
   flutter_test:
