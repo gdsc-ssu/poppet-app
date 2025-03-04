@@ -82,7 +82,9 @@ class MyPagePage extends ConsumerWidget {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      context.push('/email-setting');
+                    },
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(265.w, 40.h),
                       backgroundColor: AppColors.primary,
@@ -92,7 +94,7 @@ class MyPagePage extends ConsumerWidget {
                       ),
                     ),
                     child: Text(
-                      '보호자 이메일 변경',
+                      '보호자 이메일 설정',
                       style: AppTextStyle.pretendard_18_medium,
                     ),
                   ),

@@ -44,60 +44,108 @@ class HomePage extends ConsumerWidget {
           SizedBox(width: 16.w),
         ],
       ),
-      body: Column(
+      body: Stack(
+        clipBehavior: Clip.none,
         children: [
-          // 상단 텍스트 영역
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-            child: Text(
-              '마이크 버튼을 누르고\n대화를 나눠보세요.',
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w500,
-                color: AppColors.darkGrey,
-                height: 1.4,
+          Column(
+            children: [
+              // 상단 텍스트 영역
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '마이크 버튼을 누르고\n대화를 나눠보세요.',
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.darkGrey,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
 
-          // 캐릭터 이미지 영역 (확장 가능하도록 Expanded 사용)
-          Expanded(
-            child: Center(
-              child: Image.asset(
-                'assets/images/poppet.png', // 기존 이미지 사용
-                width: 240.w,
-              ),
-            ),
-          ),
-
-          // 마이크 버튼 영역
-          Container(
-            width: double.infinity,
-            height: 180.h,
-            decoration: BoxDecoration(
-              color: Color(0xFFF8D3B0), // 연한 살구색
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(40.r),
-                topRight: Radius.circular(40.r),
-              ),
-            ),
-            child: Center(
-              child: GestureDetector(
-                onTap: () => viewModel.toggleRecording(),
-                child: Container(
-                  width: 100.w,
-                  height: 100.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    border: Border.all(color: AppColors.primary, width: 2.w),
+              // 캐릭터 이미지 영역 (확장 가능하도록 Expanded 사용)
+              Expanded(
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/poppet.png', // 기존 이미지 사용
+                    width: 366.w,
                   ),
-                  child: Center(
-                    child: Image.asset(
-                      'assets/images/microphone.png',
-                      width: 50.w,
-                      height: 50.h,
-                      color: AppColors.primary,
+                ),
+              ),
+
+              Container(
+                width: 393.w,
+                height: 160.h,
+                child: Stack(
+                  children: [
+                    // 타원 배경 (겹침 없음)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      child: Container(
+                        width: 393.w,
+                        height: 160.h,
+                        decoration: ShapeDecoration(
+                          color: Color(0xFFfbb279), // 동일한 살구색
+                          shape: OvalBorder(),
+                        ),
+                      ),
+                    ),
+
+                    // 하단 직사각형 부분 (겹침 없이 따로 적용)
+                    Positioned(
+                      left: 0,
+                      top: 100, // 적절한 위치 조정
+                      child: Container(
+                        width: 393.w,
+                        height: 100.h, // 겹치는 부분을 제거하도록 조정
+                        color: Color(0xFFfbb279), // 동일한 색상
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // 마이크 버튼 - 최상단에 위치
+          Positioned(
+            top: 500.sp,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                height: 157.h,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  border: Border.all(color: AppColors.primary, width: 2.w),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      spreadRadius: 0,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => viewModel.toggleRecording(),
+                    customBorder: CircleBorder(),
+                    child: Center(
+                      child: Image.asset(
+                        'assets/images/microphone.png',
+                        width: 61.w,
+                        height: 86.h,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
