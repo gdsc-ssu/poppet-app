@@ -4,9 +4,18 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
 void main() async {
+  // Flutter 바인딩 초기화
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 카카오 SDK 초기화
+  KakaoSdk.init(
+    nativeAppKey: 'c3595bb22d50be34ccb16b5c34a19b73',
+    javaScriptAppKey: '5cdba5181f32c895e85625f3a050348e', // 자바스크립트 키
+  );
+
   runApp(const ProviderScope(child: MyApp()));
 }
 

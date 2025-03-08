@@ -69,22 +69,24 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       children: [
                         if (item.title == null)
                           Container(
-                            margin: EdgeInsets.only(left: 21.sp),
+                            margin: EdgeInsets.only(left: 21.sp, bottom: 20.h),
                             child: Align(
                               alignment: Alignment.topLeft,
                               child: CustomPaint(
-                                painter: SpeechBubblePainter(),
+                                painter: SpeechBubblePainter(isTopBubble: true),
                                 child: Container(
+                                  width: 220.sp,
+                                  height: 120.sp,
                                   padding: EdgeInsets.symmetric(
-                                    horizontal: 30..sp,
+                                    horizontal: 30.sp,
                                     vertical: 28.sp,
                                   ),
-                                  child: RichText(
-                                    textAlign: TextAlign.center,
-                                    text: TextSpan(
+                                  child: Center(
+                                    child: Text(
+                                      '할모니~\n안녕하세요!',
                                       style: AppTextStyle.pretendard_32_bold
                                           .copyWith(color: Colors.black),
-                                      text: '할모니~\n안녕하세요!',
+                                      textAlign: TextAlign.center,
                                     ),
                                   ),
                                 ),
@@ -97,40 +99,46 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             style: AppTextStyle.pretendard_32_bold,
                             textAlign: TextAlign.center,
                           ),
-                        Image.asset(item.image, width: 366.sp),
-                        SizedBox(height: 10.sp),
+                        Image.asset(item.image, width: 366.sp, height: 366.sp),
+
                         if (item.title == null)
                           Container(
                             margin: EdgeInsets.only(right: 17.sp),
                             child: Align(
                               alignment: Alignment.bottomRight,
                               child: CustomPaint(
-                                painter: SpeechBubblePainter(),
+                                painter: SpeechBubblePainter(
+                                  isTopBubble: false,
+                                ),
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 30.sp,
-                                    vertical: 30.sp,
+                                  width: 300.sp,
+                                  height: 120.sp,
+                                  padding: EdgeInsets.only(
+                                    left: 30.sp,
+                                    right: 30.sp,
+                                    top: 40.sp,
                                   ),
-                                  child: RichText(
-                                    textAlign: TextAlign.center,
-                                    text: TextSpan(
-                                      style: AppTextStyle.pretendard_32_bold
-                                          .copyWith(color: Colors.black),
-                                      children: [
-                                        const TextSpan(text: '저는 '),
-                                        TextSpan(
-                                          text: '뽀삐',
-                                          style: AppTextStyle.pretendard_32_bold
-                                              .copyWith(
-                                                color: AppColors.primary,
-                                              ),
-                                        ),
-                                        TextSpan(
-                                          text: '라고 해요.',
-                                          style:
-                                              AppTextStyle.pretendard_32_bold,
-                                        ),
-                                      ],
+                                  child: Center(
+                                    child: RichText(
+                                      textAlign: TextAlign.center,
+                                      text: TextSpan(
+                                        style: AppTextStyle.pretendard_32_bold
+                                            .copyWith(color: Colors.black),
+                                        children: [
+                                          const TextSpan(text: '저는 '),
+                                          TextSpan(
+                                            text: '뽀삐',
+                                            style: AppTextStyle
+                                                .pretendard_32_bold
+                                                .copyWith(
+                                                  color: const Color(
+                                                    0xFFFF5722,
+                                                  ),
+                                                ),
+                                          ),
+                                          const TextSpan(text: '라고 해요.'),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -201,36 +209,57 @@ class OnboardingItem {
 
 // 🎨 Custom Speech Bubble Painter
 class SpeechBubblePainter extends CustomPainter {
+  final bool isTopBubble;
+
+  SpeechBubblePainter({this.isTopBubble = true});
+
   @override
   void paint(Canvas canvas, Size size) {
+    // Shadow paint
+    final shadowPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.08)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
     final paint =
         Paint()
           ..color = Colors.white
-          ..style = PaintingStyle.fill
-          ..strokeWidth = 2
-          ..strokeJoin = StrokeJoin.round
-          ..strokeCap = StrokeCap.round;
-
-    final borderPaint =
-        Paint()
-          ..color = Colors.black
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2;
+          ..style = PaintingStyle.fill;
 
     final path = Path();
-    final radiusX = size.width / 2;
-    final radiusY = size.height / 2;
 
-    // 타원형 말풍선
-    path.addRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        Radius.elliptical(radiusX, radiusY),
-      ),
-    );
+    if (isTopBubble) {
+      // Top bubble - oval shape
+      final rect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height * 0.9),
+        Radius.elliptical(size.width / 2, size.height / 2),
+      );
+      path.addRRect(rect);
 
+      // Add triangular tail to bottom-right
+      path.moveTo(size.width * 0.7, size.height * 0.85);
+      path.lineTo(size.width * 0.8, size.height);
+      path.lineTo(size.width * 0.85, size.height * 0.85);
+      path.close();
+    } else {
+      // Bottom bubble - oval shape
+      final rect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, size.height * 0.1, size.width, size.height * 0.9),
+        Radius.elliptical(size.width / 2, size.height / 2),
+      );
+      path.addRRect(rect);
+
+      // Add triangular tail to top-right
+      path.moveTo(size.width * 0.7, size.height * 0.15);
+      path.lineTo(size.width * 0.8, 0);
+      path.lineTo(size.width * 0.85, size.height * 0.15);
+      path.close();
+    }
+
+    // Draw shadow first
+    canvas.drawPath(path, shadowPaint);
+    // Then draw the bubble
     canvas.drawPath(path, paint);
-    canvas.drawPath(path, borderPaint);
   }
 
   @override

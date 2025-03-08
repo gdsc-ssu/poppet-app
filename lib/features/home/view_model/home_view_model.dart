@@ -6,34 +6,41 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'home_view_model.g.dart';
 
+// 녹음 상태를 나타내는 enum
+enum RecordingState {
+  initial, // 초기 상태 (녹음 시작 전)
+  recording, // 녹음 중
+  completed, // 녹음 완료
+}
+
 @riverpod
 class HomeViewModel extends _$HomeViewModel {
   final _audioRecorder = AudioRecorder();
-  Timer? _silenceTimer;
   Timer? _recordingTimer;
   Timer? _elapsedTimer;
-  StreamSubscription? _amplitudeSubscription;
   int _fileCounter = 0;
-  bool _isRecording = false;
+  RecordingState _recordingState = RecordingState.initial;
   String _lastRecordingPath = '';
   int _elapsedSeconds = 0;
 
   @override
   Future<void> build() async {
     ref.onDispose(() {
-      _silenceTimer?.cancel();
       _recordingTimer?.cancel();
       _elapsedTimer?.cancel();
-      _amplitudeSubscription?.cancel();
       _audioRecorder.dispose();
     });
   }
 
   Future<void> toggleRecording() async {
-    if (!_isRecording) {
+    if (_recordingState == RecordingState.initial) {
       await _startRecording();
-    } else {
+    } else if (_recordingState == RecordingState.recording) {
       await _stopRecording();
+    } else {
+      // 녹음 완료 상태에서 다시 초기 상태로 돌아감
+      _recordingState = RecordingState.initial;
+      state = const AsyncValue.data(null);
     }
   }
 
@@ -46,11 +53,9 @@ class HomeViewModel extends _$HomeViewModel {
   }
 
   Future<void> _startRecording() async {
-    // 기존 타이머와 스트림 취소
-    _silenceTimer?.cancel();
+    // 기존 타이머 취소
     _recordingTimer?.cancel();
     _elapsedTimer?.cancel();
-    _amplitudeSubscription?.cancel();
 
     await requestMicrophonePermission();
     final micStatus = await Permission.microphone.request();
@@ -78,7 +83,7 @@ class HomeViewModel extends _$HomeViewModel {
         path: path,
       );
 
-      _isRecording = true;
+      _recordingState = RecordingState.recording;
       _elapsedSeconds = 0;
       state = const AsyncValue.data(null);
 
@@ -91,11 +96,7 @@ class HomeViewModel extends _$HomeViewModel {
       // 58초 타이머 시작
       _recordingTimer = Timer(const Duration(seconds: 58), () async {
         await _stopRecording();
-        await _startRecording(); // 새로운 녹음 시작
       });
-
-      // 음성 감지 모니터링 시작
-      _startSilenceDetection();
     } catch (e) {
       print('Recording error: $e');
       state = AsyncValue.error(e, StackTrace.current);
@@ -103,15 +104,13 @@ class HomeViewModel extends _$HomeViewModel {
   }
 
   Future<void> _stopRecording() async {
-    _silenceTimer?.cancel();
     _recordingTimer?.cancel();
     _elapsedTimer?.cancel();
-    _amplitudeSubscription?.cancel();
 
-    if (_isRecording) {
+    if (_recordingState == RecordingState.recording) {
       try {
         final path = await _audioRecorder.stop();
-        _isRecording = false;
+        _recordingState = RecordingState.completed;
         _fileCounter++;
         _elapsedSeconds = 0;
         state = const AsyncValue.data(null);
@@ -126,24 +125,9 @@ class HomeViewModel extends _$HomeViewModel {
     }
   }
 
-  void _startSilenceDetection() {
-    _amplitudeSubscription?.cancel();
-    _amplitudeSubscription = _audioRecorder
-        .onAmplitudeChanged(const Duration(milliseconds: 100))
-        .listen((amp) {
-          if (amp.current < 1) {
-            // 무음 감지 임계값
-            _silenceTimer?.cancel();
-            _silenceTimer = Timer(const Duration(seconds: 1), () {
-              _stopRecording();
-            });
-          } else {
-            _silenceTimer?.cancel();
-          }
-        });
-  }
-
-  bool get isRecording => _isRecording;
+  bool get isRecording => _recordingState == RecordingState.recording;
+  bool get isCompleted => _recordingState == RecordingState.completed;
+  RecordingState get recordingState => _recordingState;
   String get lastRecordingPath => _lastRecordingPath;
   String get elapsedTime {
     final minutes = (_elapsedSeconds ~/ 60).toString().padLeft(2, '0');
