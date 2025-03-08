@@ -68,36 +68,27 @@ class HomePage extends ConsumerWidget {
           Column(
             children: [
               // 상단 텍스트 영역
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.darkGrey,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
+              Container(
+                alignment: Alignment.topLeft,
+                padding: EdgeInsets.only(top: 34.h, left: 32.w),
+                child: Text(statusText, style: AppTextStyle.siwoo_32_regular),
               ),
-
-              // 캐릭터 이미지 영역 (확장 가능하도록 Expanded 사용)
+              isCompleted || isRecording
+                  ? SizedBox()
+                  : Container(margin: EdgeInsets.only(top: 30.h)),
+              isRecording
+                  ? Container(margin: EdgeInsets.only(top: 15.h))
+                  : SizedBox(),
               Expanded(
                 child: Stack(
-                  alignment: Alignment.center,
+                  alignment: Alignment.topCenter,
                   children: [
                     // 캐릭터 이미지
                     Image.asset(imagePath, width: 366.w),
                   ],
                 ),
               ),
-              isRecording ? SizedBox(height: 30.h) : SizedBox(),
-              isCompleted ? SizedBox(height: 30.h) : SizedBox(),
+
               Container(
                 width: 393.w,
                 height: 160.h,

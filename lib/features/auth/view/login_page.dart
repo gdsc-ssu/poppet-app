@@ -55,9 +55,9 @@ class LoginPage extends ConsumerWidget {
               const Spacer(),
               Center(
                 child: Image.asset(
-                  'assets/images/poppet.png',
-                  width: 240.w,
-                  height: 240.h,
+                  'assets/images/basicpopet.png',
+                  width: 366.w,
+                  height: 366.h,
                 ),
               ),
               const Spacer(),

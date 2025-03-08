@@ -54,7 +54,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     dotColor: Colors.grey.shade300,
                   ),
                 ),
-                SizedBox(height: 40.h),
+
                 // Carousel
                 CarouselSlider.builder(
                   carouselController: _carouselController,
@@ -90,12 +90,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
                               ),
                             ),
                           ),
+
                         if (item.title != null)
-                          Text(
-                            item.title!,
-                            style: AppTextStyle.pretendard_32_bold,
-                            textAlign: TextAlign.center,
+                          Container(
+                            margin: EdgeInsets.only(top: 40.h),
+                            child: Text(
+                              item.title!,
+                              style: AppTextStyle.siwoo_32_regular,
+                              textAlign: TextAlign.center,
+                            ),
                           ),
+                        if (item.title == 'POPPET에서\n오늘 하루 있었던 일을')
+                          Container(margin: EdgeInsets.only(top: 10.h)),
                         Image.asset(item.image, width: 366.sp, height: 366.sp),
 
                         if (item.title == null)
@@ -133,10 +139,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                               ),
                             ),
                           ),
+                        if (item.subtitle == '바쁘까, 방해가 될까\n걱정되셨죠?')
+                          Container(margin: EdgeInsets.only(top: 10.h)),
                         if (item.subtitle != null)
                           Text(
                             item.subtitle!,
-                            style: AppTextStyle.pretendard_32_bold.copyWith(
+                            style: AppTextStyle.siwoo_32_regular.copyWith(
                               color: AppColors.darkGrey,
                               height: 1.6,
                             ),
