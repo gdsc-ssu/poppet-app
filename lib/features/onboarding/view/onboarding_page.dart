@@ -69,12 +69,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       children: [
                         if (item.title == null)
                           Container(
-                            margin: EdgeInsets.only(left: 21.sp),
+                            margin: EdgeInsets.only(left: 26.sp),
                             child: Align(
-                              alignment: Alignment.bottomLeft,
+                              alignment: Alignment.topLeft,
                               child: CustomPaint(
                                 painter: SpeechBubblePainter(isTopBubble: true),
                                 child: Container(
+                                  padding: EdgeInsets.only(top: 21.sp),
                                   width: 220.sp,
                                   height: 108.sp,
                                   child: Center(
@@ -104,11 +105,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                               painter: SpeechBubblePainter(isTopBubble: false),
                               child: Container(
                                 width: 300.sp,
-                                height: 108.sp,
+                                height: 98.sp,
                                 padding: EdgeInsets.only(
                                   left: 30.sp,
                                   right: 30.sp,
-                                  top: 20.sp,
                                 ),
                                 child: Center(
                                   child: RichText(
@@ -219,28 +219,28 @@ class SpeechBubblePainter extends CustomPainter {
     if (isTopBubble) {
       // Top bubble - oval shape
       final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height * 0.9),
-        Radius.elliptical(size.width / 2, size.height / 2),
+        Rect.fromLTWH(0, 0, size.width, size.height * 1.2),
+        Radius.elliptical(size.width / 2, size.height / 1.5),
       );
       path.addRRect(rect);
 
       // Add triangular tail to bottom-right
-      path.moveTo(size.width * 0.7, size.height * 0.8);
-      path.lineTo(size.width * 0.8, 0);
-      path.lineTo(size.width * 0.85, size.height * 1.05);
+      path.moveTo(size.width * 0.65, size.height * 1.1);
+      path.lineTo(size.width * 0.9, size.height * 0.2);
+      path.lineTo(size.width * 0.75, size.height * 1.35);
       path.close();
     } else {
       // Bottom bubble - oval shape
       final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, size.height * 0.2, size.width, size.height * 0.9),
+        Rect.fromLTWH(0, -size.height * 0.01, size.width, size.height * 0.9),
         Radius.elliptical(size.width / 2, size.height / 2),
       );
       path.addRRect(rect);
 
       // Add triangular tail to top-right
-      path.moveTo(size.width * 0.2, size.height * 0.65);
-      path.lineTo(size.width * 0.4, 0.8);
-      path.lineTo(size.width * 0.5, size.height * 1.0);
+      path.moveTo(size.width * 0.17, size.height * 0.7);
+      path.lineTo(size.width * 0.4, -size.height * 0.27);
+      path.lineTo(size.width * 0.45, size.height * 0.7);
       path.close();
     }
 
