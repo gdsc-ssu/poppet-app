@@ -106,6 +106,7 @@ flutter:
     - assets/images/microphone.png
     - assets/images/PoppetLogo2.svg
     - assets/images/logo.svg
+    - assets/images/mypage.png
     - assets/images/splash/ # 스플래시 디렉토리의 모든 파일 포함
 
   # To add assets to your application, add an assets section, like this:
@@ -131,6 +132,10 @@ flutter:
         - asset: assets/fonts/Pretendard-Medium.ttf
           weight: 500
         - asset: assets/fonts/Pretendard-Regular.ttf
+          weight: 400
+    - family: siwoo
+      fonts:
+        - asset: assets/fonts/Siwoo.ttf
           weight: 400
 
   #   - family: Trajan Pro

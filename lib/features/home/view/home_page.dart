@@ -7,6 +7,58 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_style.dart';
 import '../view_model/home_view_model.dart';
 
+// 말풍선 CustomPainter 추가
+class SpeechBubblePainter extends CustomPainter {
+  final Color color;
+  final Color shadowColor;
+
+  SpeechBubblePainter({required this.color, required this.shadowColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill;
+
+    final Paint shadowPaint =
+        Paint()
+          ..color = shadowColor
+          ..style = PaintingStyle.fill
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 5);
+
+    var path = Path();
+    path.moveTo(15, 15);
+    path.lineTo(30, 15);
+    path.lineTo(30, 5);
+    path.quadraticBezierTo(30, 2, 32, 2);
+    path.lineTo(48, 15);
+    path.lineTo(size.width - 15, 15);
+    path.quadraticBezierTo(size.width, 15, size.width, 30);
+    path.lineTo(size.width, size.height - 15);
+    path.quadraticBezierTo(
+      size.width,
+      size.height,
+      size.width - 15,
+      size.height,
+    );
+    path.lineTo(15, size.height);
+    path.quadraticBezierTo(0, size.height, 0, size.height - 15);
+    path.lineTo(0, 30);
+    path.quadraticBezierTo(0, 15, 15, 15);
+
+    // 그림자 그리기
+    canvas.drawPath(path, shadowPaint);
+    // 말풍선 그리기
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+}
+
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
@@ -43,19 +95,17 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: SvgPicture.asset(
-          'assets/images/logo.svg',
-          width: 24.w,
-          height: 24.h,
+        title: SizedBox(
+          width: 120.w, // 적절한 크기 설정
+          height: 30.h,
+          child: Image.asset('assets/images/splash/PoppetText.png'),
         ),
         actions: [
           IconButton(
-            icon: CircleAvatar(
-              backgroundColor: Colors.grey[300],
-              child: const Icon(
-                Icons.person_outline,
-                color: AppColors.darkGrey,
-              ),
+            icon: Image.asset(
+              'assets/images/mypage.png',
+              width: 40.w,
+              height: 40.h,
             ),
             onPressed: () {
               context.push('/mypage');
@@ -90,7 +140,64 @@ class HomePage extends ConsumerWidget {
 
               // 캐릭터 이미지 영역 (확장 가능하도록 Expanded 사용)
               Expanded(
-                child: Center(child: Image.asset(imagePath, width: 366.w)),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // 캐릭터 이미지
+                    Image.asset(imagePath, width: 366.w),
+
+                    // 말풍선
+                    Positioned(
+                      top: 80.h,
+                      child: CustomPaint(
+                        painter: SpeechBubblePainter(
+                          color: Colors.white,
+                          shadowColor: Colors.black.withOpacity(0.05),
+                        ),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 40.w,
+                            vertical: 16.h,
+                          ),
+                          width: 280.w,
+                          height: 70.h,
+                          child: Center(
+                            child: RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '저는 ',
+                                    style: TextStyle(
+                                      fontSize: 18.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '뽀삐',
+                                    style: TextStyle(
+                                      fontSize: 18.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFFFF8A3D),
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '라고 해요.',
+                                    style: TextStyle(
+                                      fontSize: 18.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               isRecording ? SizedBox(height: 30.h) : SizedBox(),
               isCompleted ? SizedBox(height: 30.h) : SizedBox(),
