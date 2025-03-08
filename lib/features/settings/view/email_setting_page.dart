@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_style.dart';
 import '../view_model/email_setting_view_model.dart';
+import '../view/email_frequency_page.dart';
 
 class EmailSettingPage extends ConsumerStatefulWidget {
   const EmailSettingPage({Key? key}) : super(key: key);
@@ -17,6 +18,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
   final List<TextEditingController> _controllers = [TextEditingController()];
   static const int MAX_EMAIL_COUNT = 5;
   final Map<int, String> _errorMessages = {};
+  bool _isButtonEnabled = false; // 버튼 활성화 상태를 추적하는 변수 추가
 
   // 이메일 유효성 검사 함수
   bool _isValidEmail(String email) {
@@ -56,7 +58,37 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
           _errorMessages.remove(index);
         }
       }
+
+      // 버튼 활성화 상태 업데이트
+      _updateButtonState();
     });
+  }
+
+  // 버튼 활성화 상태 업데이트 함수
+  void _updateButtonState() {
+    bool hasValidEmail = false;
+
+    // 하나 이상의 유효한 이메일이 있는지 확인
+    for (var controller in _controllers) {
+      if (controller.text.isNotEmpty && _isValidEmail(controller.text)) {
+        hasValidEmail = true;
+        break;
+      }
+    }
+
+    // 에러가 없고 하나 이상의 유효한 이메일이 있으면 버튼 활성화
+    _isButtonEnabled = _errorMessages.isEmpty && hasValidEmail;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // 컨트롤러에 리스너 추가
+    for (var controller in _controllers) {
+      controller.addListener(() {
+        _updateButtonState();
+      });
+    }
   }
 
   @override
@@ -70,7 +102,12 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
   void _addEmailField() {
     if (_controllers.length < MAX_EMAIL_COUNT) {
       setState(() {
-        _controllers.add(TextEditingController());
+        final controller = TextEditingController();
+        controller.addListener(() {
+          _updateButtonState();
+        });
+        _controllers.add(controller);
+        _updateButtonState();
       });
     }
   }
@@ -93,6 +130,9 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
         });
         _errorMessages.clear();
         _errorMessages.addAll(newErrorMessages);
+
+        // 필드 제거 후 버튼 상태 업데이트
+        _updateButtonState();
       });
     }
   }
@@ -284,46 +324,37 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
 
             // 다음 버튼
             GestureDetector(
-              onTap: () {
-                // 유효성 검사 에러가 있는지 확인
-                bool hasErrors = _errorMessages.isNotEmpty;
+              onTap:
+                  _isButtonEnabled
+                      ? () {
+                        // 이메일 저장 및 다음 화면으로 이동
+                        List<String> validEmails = [];
+                        for (var controller in _controllers) {
+                          if (controller.text.isNotEmpty &&
+                              _isValidEmail(controller.text)) {
+                            validEmails.add(controller.text);
+                          }
+                        }
 
-                // 에러가 있으면 클릭 무시
-                if (hasErrors) {
-                  return;
-                }
-
-                // 이메일 저장 및 다음 화면으로 이동
-                List<String> validEmails = [];
-                for (var controller in _controllers) {
-                  if (controller.text.isNotEmpty &&
-                      _isValidEmail(controller.text)) {
-                    validEmails.add(controller.text);
-                  }
-                }
-
-                if (validEmails.isNotEmpty) {
-                  emailNotifier.saveEmails(validEmails);
-                  context.pop();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('유효한 이메일을 입력해주세요.'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
+                        if (validEmails.isNotEmpty) {
+                          emailNotifier.saveEmails(validEmails);
+                          // 이메일 발송 주기 페이지로 이동
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EmailFrequencyPage(),
+                            ),
+                          );
+                        }
+                      }
+                      : null,
               behavior: HitTestBehavior.opaque,
               child: Container(
                 width: 329.w,
                 margin: EdgeInsets.only(bottom: 88.h),
                 padding: EdgeInsets.symmetric(vertical: 16.h),
                 decoration: BoxDecoration(
-                  color:
-                      _errorMessages.isNotEmpty
-                          ? Colors.grey
-                          : Color(0xFFFF6B00),
+                  color: _isButtonEnabled ? Color(0xFFFF6B00) : Colors.grey,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Center(

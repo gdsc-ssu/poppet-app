@@ -43,19 +43,17 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: SvgPicture.asset(
-          'assets/images/logo.svg',
-          width: 24.w,
-          height: 24.h,
+        title: SizedBox(
+          width: 120.w, // 적절한 크기 설정
+          height: 30.h,
+          child: Image.asset('assets/images/splash/PoppetText.png'),
         ),
         actions: [
           IconButton(
-            icon: CircleAvatar(
-              backgroundColor: Colors.grey[300],
-              child: const Icon(
-                Icons.person_outline,
-                color: AppColors.darkGrey,
-              ),
+            icon: Image.asset(
+              'assets/images/mypage.png',
+              width: 40.w,
+              height: 40.h,
             ),
             onPressed: () {
               context.push('/mypage');
@@ -70,30 +68,27 @@ class HomePage extends ConsumerWidget {
           Column(
             children: [
               // 상단 텍스트 영역
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              Container(
+                alignment: Alignment.topLeft,
+                padding: EdgeInsets.only(top: 34.h, left: 32.w),
+                child: Text(statusText, style: AppTextStyle.siwoo_32_regular),
+              ),
+              isCompleted || isRecording
+                  ? SizedBox()
+                  : Container(margin: EdgeInsets.only(top: 30.h)),
+              isRecording
+                  ? Container(margin: EdgeInsets.only(top: 15.h))
+                  : SizedBox(),
+              Expanded(
+                child: Stack(
+                  alignment: Alignment.topCenter,
                   children: [
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.darkGrey,
-                        height: 1.4,
-                      ),
-                    ),
+                    // 캐릭터 이미지
+                    Image.asset(imagePath, width: 366.w),
                   ],
                 ),
               ),
 
-              // 캐릭터 이미지 영역 (확장 가능하도록 Expanded 사용)
-              Expanded(
-                child: Center(child: Image.asset(imagePath, width: 366.w)),
-              ),
-              isRecording ? SizedBox(height: 30.h) : SizedBox(),
-              isCompleted ? SizedBox(height: 30.h) : SizedBox(),
               Container(
                 width: 393.w,
                 height: 160.h,

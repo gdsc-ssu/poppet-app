@@ -54,7 +54,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     dotColor: Colors.grey.shade300,
                   ),
                 ),
-                SizedBox(height: 40.h),
+
                 // Carousel
                 CarouselSlider.builder(
                   carouselController: _carouselController,
@@ -69,22 +69,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       children: [
                         if (item.title == null)
                           Container(
-                            margin: EdgeInsets.only(left: 21.sp, bottom: 20.h),
+                            margin: EdgeInsets.only(left: 26.sp),
                             child: Align(
                               alignment: Alignment.topLeft,
                               child: CustomPaint(
                                 painter: SpeechBubblePainter(isTopBubble: true),
                                 child: Container(
+                                  padding: EdgeInsets.only(top: 21.sp),
                                   width: 220.sp,
-                                  height: 120.sp,
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 30.sp,
-                                    vertical: 28.sp,
-                                  ),
+                                  height: 108.sp,
                                   child: Center(
                                     child: Text(
                                       '할모니~\n안녕하세요!',
-                                      style: AppTextStyle.pretendard_32_bold
+                                      style: AppTextStyle.siwoo_32_regular
                                           .copyWith(color: Colors.black),
                                       textAlign: TextAlign.center,
                                     ),
@@ -93,62 +90,61 @@ class _OnboardingPageState extends State<OnboardingPage> {
                               ),
                             ),
                           ),
+
                         if (item.title != null)
-                          Text(
-                            item.title!,
-                            style: AppTextStyle.pretendard_32_bold,
-                            textAlign: TextAlign.center,
+                          Container(
+                            margin: EdgeInsets.only(top: 40.h),
+                            child: Text(
+                              item.title!,
+                              style: AppTextStyle.siwoo_32_regular,
+                              textAlign: TextAlign.center,
+                            ),
                           ),
+                        if (item.title == 'POPPET에서\n오늘 하루 있었던 일을')
+                          Container(margin: EdgeInsets.only(top: 10.h)),
                         Image.asset(item.image, width: 366.sp, height: 366.sp),
 
                         if (item.title == null)
                           Container(
-                            margin: EdgeInsets.only(right: 17.sp),
-                            child: Align(
-                              alignment: Alignment.bottomRight,
-                              child: CustomPaint(
-                                painter: SpeechBubblePainter(
-                                  isTopBubble: false,
+                            margin: EdgeInsets.only(left: 47.sp),
+                            child: CustomPaint(
+                              painter: SpeechBubblePainter(isTopBubble: false),
+                              child: Container(
+                                width: 300.sp,
+                                height: 98.sp,
+                                padding: EdgeInsets.only(
+                                  left: 30.sp,
+                                  right: 30.sp,
                                 ),
-                                child: Container(
-                                  width: 300.sp,
-                                  height: 120.sp,
-                                  padding: EdgeInsets.only(
-                                    left: 30.sp,
-                                    right: 30.sp,
-                                    top: 40.sp,
-                                  ),
-                                  child: Center(
-                                    child: RichText(
-                                      textAlign: TextAlign.center,
-                                      text: TextSpan(
-                                        style: AppTextStyle.pretendard_32_bold
-                                            .copyWith(color: Colors.black),
-                                        children: [
-                                          const TextSpan(text: '저는 '),
-                                          TextSpan(
-                                            text: '뽀삐',
-                                            style: AppTextStyle
-                                                .pretendard_32_bold
-                                                .copyWith(
-                                                  color: const Color(
-                                                    0xFFFF5722,
-                                                  ),
-                                                ),
-                                          ),
-                                          const TextSpan(text: '라고 해요.'),
-                                        ],
-                                      ),
+                                child: Center(
+                                  child: RichText(
+                                    textAlign: TextAlign.center,
+                                    text: TextSpan(
+                                      style: AppTextStyle.siwoo_36_regular
+                                          .copyWith(color: Colors.black),
+                                      children: [
+                                        TextSpan(text: '저는 '),
+                                        TextSpan(
+                                          text: '뽀삐',
+                                          style: AppTextStyle.siwoo_36_regular
+                                              .copyWith(
+                                                color: const Color(0xFFFF5722),
+                                              ),
+                                        ),
+                                        TextSpan(text: '라고 해요.'),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
+                        if (item.subtitle == '바쁘까, 방해가 될까\n걱정되셨죠?')
+                          Container(margin: EdgeInsets.only(top: 10.h)),
                         if (item.subtitle != null)
                           Text(
                             item.subtitle!,
-                            style: AppTextStyle.pretendard_32_bold.copyWith(
+                            style: AppTextStyle.siwoo_32_regular.copyWith(
                               color: AppColors.darkGrey,
                               height: 1.6,
                             ),
@@ -231,28 +227,28 @@ class SpeechBubblePainter extends CustomPainter {
     if (isTopBubble) {
       // Top bubble - oval shape
       final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height * 0.9),
-        Radius.elliptical(size.width / 2, size.height / 2),
+        Rect.fromLTWH(0, 0, size.width, size.height * 1.2),
+        Radius.elliptical(size.width / 2, size.height / 1.5),
       );
       path.addRRect(rect);
 
       // Add triangular tail to bottom-right
-      path.moveTo(size.width * 0.7, size.height * 0.85);
-      path.lineTo(size.width * 0.8, size.height);
-      path.lineTo(size.width * 0.85, size.height * 0.85);
+      path.moveTo(size.width * 0.65, size.height * 1.1);
+      path.lineTo(size.width * 0.9, size.height * 0.2);
+      path.lineTo(size.width * 0.75, size.height * 1.35);
       path.close();
     } else {
       // Bottom bubble - oval shape
       final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, size.height * 0.1, size.width, size.height * 0.9),
+        Rect.fromLTWH(0, -size.height * 0.01, size.width, size.height * 0.9),
         Radius.elliptical(size.width / 2, size.height / 2),
       );
       path.addRRect(rect);
 
       // Add triangular tail to top-right
-      path.moveTo(size.width * 0.7, size.height * 0.15);
-      path.lineTo(size.width * 0.8, 0);
-      path.lineTo(size.width * 0.85, size.height * 0.15);
+      path.moveTo(size.width * 0.17, size.height * 0.7);
+      path.lineTo(size.width * 0.4, -size.height * 0.27);
+      path.lineTo(size.width * 0.45, size.height * 0.7);
       path.close();
     }
 

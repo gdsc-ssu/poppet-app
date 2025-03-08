@@ -76,4 +76,14 @@ class AppTextStyle {
     fontSize: 12.sp,
     fontWeight: FontWeight.w300,
   );
+  static TextStyle siwoo_32_regular = TextStyle(
+    fontFamily: 'siwoo',
+    fontSize: 32.sp,
+    fontWeight: FontWeight.w400,
+  );
+  static TextStyle siwoo_36_regular = TextStyle(
+    fontFamily: 'siwoo',
+    fontSize: 36.sp,
+    fontWeight: FontWeight.w400,
+  );
 }
