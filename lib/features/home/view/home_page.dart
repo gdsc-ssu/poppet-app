@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_style.dart';
@@ -13,20 +14,39 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final viewModel = ref.watch(homeViewModelProvider.notifier);
     final recordingState = ref.watch(homeViewModelProvider);
+    final recordState = viewModel.recordingState;
+    final isRecording = viewModel.isRecording;
+    final isCompleted = viewModel.isCompleted;
+
+    // 상태에 따른 텍스트 설정
+    String statusText = '';
+    if (recordState == RecordingState.initial) {
+      statusText = '마이크 버튼을 누르고\n대화를 나눠보세요.';
+    } else if (recordState == RecordingState.recording) {
+      statusText = '대화를 그만하고 싶다면\n중지 버튼을 눌러주세요';
+    } else {
+      statusText = '뽀삐가 대답을\n생각하는 중이에요';
+    }
+
+    // 상태에 따른 이미지 설정
+    String imagePath = '';
+    if (recordState == RecordingState.initial) {
+      imagePath = 'assets/images/basicpopet.png';
+    } else if (recordState == RecordingState.recording) {
+      imagePath = 'assets/images/listenPoppet.png';
+    } else {
+      imagePath = 'assets/images/poppet2.png';
+    }
 
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(
-          'POPPET',
-          style: TextStyle(
-            fontSize: 24.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-            letterSpacing: 1.2,
-          ),
+        title: SvgPicture.asset(
+          'assets/images/logo.svg',
+          width: 24.w,
+          height: 24.h,
         ),
         actions: [
           IconButton(
@@ -56,7 +76,7 @@ class HomePage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '마이크 버튼을 누르고\n대화를 나눠보세요.',
+                      statusText,
                       style: TextStyle(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.w500,
@@ -70,14 +90,10 @@ class HomePage extends ConsumerWidget {
 
               // 캐릭터 이미지 영역 (확장 가능하도록 Expanded 사용)
               Expanded(
-                child: Center(
-                  child: Image.asset(
-                    'assets/images/poppet.png', // 기존 이미지 사용
-                    width: 366.w,
-                  ),
-                ),
+                child: Center(child: Image.asset(imagePath, width: 366.w)),
               ),
-
+              isRecording ? SizedBox(height: 30.h) : SizedBox(),
+              isCompleted ? SizedBox(height: 30.h) : SizedBox(),
               Container(
                 width: 393.w,
                 height: 160.h,
@@ -113,47 +129,101 @@ class HomePage extends ConsumerWidget {
             ],
           ),
 
-          // 마이크 버튼 - 최상단에 위치
+          // 녹음 버튼 - 최상단에 위치
           Positioned(
             top: 500.sp,
             left: 0,
             right: 0,
-            child: Center(
-              child: Container(
-                height: 157.h,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(color: AppColors.primary, width: 2.w),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      spreadRadius: 0,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => viewModel.toggleRecording(),
-                    customBorder: CircleBorder(),
-                    child: Center(
-                      child: Image.asset(
-                        'assets/images/microphone.png',
-                        width: 61.w,
-                        height: 86.h,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            child: Center(child: _buildButton(recordState, viewModel)),
           ),
         ],
       ),
     );
+  }
+
+  // 상태에 따른 버튼 위젯 생성
+  Widget _buildButton(RecordingState state, HomeViewModel viewModel) {
+    switch (state) {
+      case RecordingState.initial:
+        // 초기 상태 - 마이크 버튼 (기존 코드 사용)
+        return Container(
+          height: 157.h,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(color: AppColors.primary, width: 2.w),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                spreadRadius: 0,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => viewModel.toggleRecording(),
+              customBorder: CircleBorder(),
+              child: Center(
+                child: Image.asset(
+                  'assets/images/microphone.png',
+                  width: 61.w,
+                  height: 86.h,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ),
+        );
+
+      case RecordingState.recording:
+        // 녹음 중 - 일시정지 버튼
+        return GestureDetector(
+          onTap: () => viewModel.toggleRecording(),
+          child: Container(
+            width: 157.w,
+            height: 157.h,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primary,
+            ),
+            child: Icon(Icons.pause, color: Colors.white, size: 70.sp),
+          ),
+        );
+
+      case RecordingState.completed:
+        // 녹음 완료 - 점 세 개 버튼
+        return Container(
+          width: 157.w,
+          height: 157.h,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(color: AppColors.primary, width: 2.w),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                spreadRadius: 0,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => viewModel.toggleRecording(),
+              customBorder: CircleBorder(),
+              child: Icon(
+                Icons.more_horiz,
+                color: AppColors.primary,
+                size: 70.sp,
+              ),
+            ),
+          ),
+        );
+    }
   }
 }

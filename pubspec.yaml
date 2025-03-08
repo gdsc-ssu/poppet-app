@@ -65,7 +65,7 @@ dependencies:
   kakao_flutter_sdk: ^1.9.6
   kakao_flutter_sdk_user: ^1.7.0 # 카카오 로그인 SDK
   flutter_secure_storage: ^8.1.0
-  flutter_svg: ^2.0.9 # SVG 지원
+  flutter_svg: ^2.0.17 # SVG 지원
   another_flutter_splash_screen: ^1.2.1 # 스플래시 화면
 
 dev_dependencies:
@@ -102,7 +102,10 @@ flutter:
     - assets/images/kakao.png
     - assets/images/poppet2.png
     - assets/images/basicpopet.png
+    - assets/images/listenPoppet.png
     - assets/images/microphone.png
+    - assets/images/PoppetLogo2.svg
+    - assets/images/logo.svg
     - assets/images/splash/ # 스플래시 디렉토리의 모든 파일 포함
 
   # To add assets to your application, add an assets section, like this:
