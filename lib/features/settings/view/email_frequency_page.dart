@@ -53,15 +53,6 @@ class _EmailFrequencyPageState extends ConsumerState<EmailFrequencyPage> {
           icon: Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => context.pop(),
         ),
-        title: Text(
-          '이메일 발송 주기 입력',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        centerTitle: true,
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 32.w),
@@ -69,25 +60,16 @@ class _EmailFrequencyPageState extends ConsumerState<EmailFrequencyPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 16.h),
+            Text('이메일 발송 주기 입력', style: AppTextStyle.pretendard_32_bold),
+            SizedBox(height: 4.h),
             Text(
               '대화 내역을 받을 주기를 선정해 주세요.',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
+              style: AppTextStyle.pretendard_18_regular,
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: 40.h),
 
             // 발송 주기 선택 영역
-            Text(
-              '발송 주기',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
+            Text('발송 주기', style: AppTextStyle.pretendard_18_medium),
             SizedBox(height: 16.h),
 
             // 주기 선택 버튼들
@@ -126,7 +108,7 @@ class _EmailFrequencyPageState extends ConsumerState<EmailFrequencyPage> {
               behavior: HitTestBehavior.opaque,
               child: Container(
                 width: double.infinity,
-                margin: EdgeInsets.only(bottom: 48.h),
+                margin: EdgeInsets.only(bottom: 88.h),
                 padding: EdgeInsets.symmetric(vertical: 16.h),
                 decoration: BoxDecoration(
                   color: Color(0xFFFF6B00),
@@ -162,25 +144,20 @@ class _EmailFrequencyPageState extends ConsumerState<EmailFrequencyPage> {
           });
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 16.h),
+          padding: EdgeInsets.symmetric(vertical: 12.h),
           decoration: BoxDecoration(
-            color: isSelected ? Color(0xFFFB6B00) : Colors.white,
+            color: isSelected ? Color.fromRGBO(248, 107, 0, 0.5) : Colors.white,
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(12.r),
               topLeft: Radius.circular(12.r),
             ),
-            border: Border.all(
-              color: isSelected ? Color(0xFFFB6B00) : Colors.grey.shade300,
-              width: 1.5,
-            ),
+            border: Border.all(color: Colors.grey.shade300, width: 1.5),
           ),
           child: Center(
             child: Text(
               '${days}일',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
-                color: isSelected ? Colors.white : Colors.black,
+              style: AppTextStyle.pretendard_24_medium.copyWith(
+                color: isSelected ? Colors.white : Color(0xff333333),
               ),
             ),
           ),
@@ -200,25 +177,20 @@ class _EmailFrequencyPageState extends ConsumerState<EmailFrequencyPage> {
           });
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 16.h),
+          padding: EdgeInsets.symmetric(vertical: 12.h),
           decoration: BoxDecoration(
-            color: isSelected ? Color(0xFFFB6B00) : Colors.white,
+            color: isSelected ? Color.fromRGBO(248, 107, 0, 0.5) : Colors.white,
             borderRadius: BorderRadius.only(
               bottomRight: Radius.circular(12.r),
               topRight: Radius.circular(12.r),
             ),
-            border: Border.all(
-              color: isSelected ? Color(0xFFFB6B00) : Colors.grey.shade300,
-              width: 1.5,
-            ),
+            border: Border.all(color: Colors.grey.shade300, width: 1.5),
           ),
           child: Center(
             child: Text(
               '${days}일',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
-                color: isSelected ? Colors.white : Colors.black,
+              style: AppTextStyle.pretendard_24_medium.copyWith(
+                color: isSelected ? Colors.white : Color(0xff333333),
               ),
             ),
           ),
@@ -238,27 +210,20 @@ class _EmailFrequencyPageState extends ConsumerState<EmailFrequencyPage> {
           });
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 16.h),
+          padding: EdgeInsets.symmetric(vertical: 12.h),
+
           decoration: BoxDecoration(
-            color: isSelected ? Color(0xFFFB6B00) : Colors.white,
+            color: isSelected ? Color.fromRGBO(248, 107, 0, 0.5) : Colors.white,
             border: Border(
-              top: BorderSide(
-                color: isSelected ? Color(0xFFFB6B00) : Colors.grey.shade300,
-                width: 1.5,
-              ),
-              bottom: BorderSide(
-                color: isSelected ? Color(0xFFFB6B00) : Colors.grey.shade300,
-                width: 1.5,
-              ),
+              top: BorderSide(color: Colors.grey.shade300, width: 1.5),
+              bottom: BorderSide(color: Colors.grey.shade300, width: 1.5),
             ),
           ),
           child: Center(
             child: Text(
               '${days}일',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
-                color: isSelected ? Colors.white : Colors.black,
+              style: AppTextStyle.pretendard_24_medium.copyWith(
+                color: isSelected ? Colors.white : Color(0xff333333),
               ),
             ),
           ),
