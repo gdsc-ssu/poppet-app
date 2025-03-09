@@ -151,14 +151,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
           icon: Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => context.pop(),
         ),
-        title: Text(
-          '이메일 입력',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
+
         centerTitle: true,
       ),
       body: Padding(
@@ -166,28 +159,19 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 16.h),
-            Text(
-              '보호자의 이메일을 입력해주세요.',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
+            SizedBox(height: 24.h),
+            Text('이메일 입력', style: AppTextStyle.pretendard_32_bold),
             SizedBox(height: 4.h),
             Text(
-              '사용자의 대화 내역을 전달받을 수 있습니다. (최대 5개)',
-              style: TextStyle(fontSize: 14.sp, color: Colors.black54),
+              '보호자의 이메일을 입력해주세요.\n사용자의 대화 내역을 전달받을 수 있습니다.',
+              style: AppTextStyle.pretendard_18_regular,
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: 32.h),
 
-            // 이메일 입력 필드들과 추가 버튼을 포함하는 영역
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    // 이메일 입력 필드들
                     for (int i = 0; i < _controllers.length; i++)
                       Column(
                         children: [
@@ -206,7 +190,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                                       hintStyle: TextStyle(color: Colors.grey),
                                       contentPadding: EdgeInsets.symmetric(
                                         horizontal: 16.w,
-                                        vertical: 18.h,
+                                        vertical: 15.h,
                                       ),
                                       filled: true,
                                       fillColor: Colors.white,
@@ -292,7 +276,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                                 ),
                             ],
                           ),
-                          SizedBox(height: 32.h),
+                          SizedBox(height: 26.h),
                         ],
                       ),
 
