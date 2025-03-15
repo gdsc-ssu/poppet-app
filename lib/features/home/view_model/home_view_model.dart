@@ -3,6 +3,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:pet/core/api/chat_repository.dart';
+import 'package:pet/core/api/models/chat_response.dart';
 
 part 'home_view_model.g.dart';
 
@@ -11,6 +13,8 @@ enum RecordingState {
   initial, // 초기 상태 (녹음 시작 전)
   recording, // 녹음 중
   completed, // 녹음 완료
+  uploading, // 업로드 중
+  uploaded, // 업로드 완료
 }
 
 @riverpod
@@ -22,6 +26,9 @@ class HomeViewModel extends _$HomeViewModel {
   RecordingState _recordingState = RecordingState.initial;
   String _lastRecordingPath = '';
   int _elapsedSeconds = 0;
+  ChatResponse? _lastChatResponse;
+
+  ChatRepository get _chatRepository => ref.read(chatRepositoryProvider);
 
   @override
   Future<void> build() async {
@@ -118,6 +125,9 @@ class HomeViewModel extends _$HomeViewModel {
         if (path != null) {
           _lastRecordingPath = path;
           print('Recording saved at: $path');
+
+          // 녹음 파일 업로드
+          await _uploadRecording(path);
         }
       } catch (e) {
         print('Stop recording error: $e');
@@ -125,10 +135,37 @@ class HomeViewModel extends _$HomeViewModel {
     }
   }
 
+  Future<void> _uploadRecording(String audioPath) async {
+    try {
+      _recordingState = RecordingState.uploading;
+      state = const AsyncValue.data(null);
+
+      final response = await _chatRepository.uploadAudio(audioPath);
+
+      if (response != null) {
+        _lastChatResponse = response;
+        _recordingState = RecordingState.uploaded;
+        print('Audio uploaded successfully: ${response.message}');
+      } else {
+        _recordingState = RecordingState.completed;
+        print('Failed to upload audio');
+      }
+
+      state = const AsyncValue.data(null);
+    } catch (e) {
+      _recordingState = RecordingState.completed;
+      print('Upload error: $e');
+      state = AsyncValue.error(e, StackTrace.current);
+    }
+  }
+
   bool get isRecording => _recordingState == RecordingState.recording;
   bool get isCompleted => _recordingState == RecordingState.completed;
+  bool get isUploading => _recordingState == RecordingState.uploading;
+  bool get isUploaded => _recordingState == RecordingState.uploaded;
   RecordingState get recordingState => _recordingState;
   String get lastRecordingPath => _lastRecordingPath;
+  ChatResponse? get lastChatResponse => _lastChatResponse;
   String get elapsedTime {
     final minutes = (_elapsedSeconds ~/ 60).toString().padLeft(2, '0');
     final seconds = (_elapsedSeconds % 60).toString().padLeft(2, '0');

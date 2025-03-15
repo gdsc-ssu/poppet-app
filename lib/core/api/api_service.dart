@@ -1,27 +1,48 @@
 import 'package:dio/dio.dart';
+import 'package:retrofit/retrofit.dart';
+import 'package:pet/core/api/models/auth_response.dart';
+import 'package:pet/core/api/models/user_info.dart';
+import 'package:pet/core/api/models/chat_response.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:pet/core/network/dio_client.dart';
 
-class ApiService {
-  final Dio _dio;
+part 'api_service.g.dart';
 
-  ApiService(this._dio);
+@RestApi()
+abstract class ApiService {
+  factory ApiService(Dio dio) = _ApiService;
 
-  Future<AuthResponse> oAuthKakao(Map<String, dynamic> data) async {
-    try {
-      final response = await _dio.post('/auth/kakao', data: data);
-      return AuthResponse.fromJson(response.data);
-    } catch (e) {
-      throw Exception('카카오 로그인 실패: $e');
-    }
-  }
+  @POST('/auth/kakao')
+  Future<AuthResponse> oAuthKakao(@Body() Map<String, dynamic> data);
 
-  Future<UserInfo> getUserInfo() async {
-    try {
-      final response = await _dio.get('/user/me');
-      return UserInfo.fromJson(response.data);
-    } catch (e) {
-      throw Exception('사용자 정보 가져오기 실패: $e');
-    }
-  }
+  @GET('/user/me')
+  Future<UserInfo> getUserInfo();
+
+  @POST('/chats')
+  @MultiPart()
+  Future<ChatResponse> createChat({
+    @Query('chat') required String fileNames,
+    @Part(name: 'chat') required List<MultipartFile> files,
+  });
+
+  @PATCH('/chats/{chatId}')
+  Future<ChatResponse> updateChat(
+    @Path() String chatId,
+    @Body() Map<String, dynamic> data,
+  );
+
+  @POST('/chats/{chatId}/name')
+  Future<ChatResponse> setChatName({
+    @Path() required String chatId,
+    @Query('name') required String name,
+    @Body() required Map<String, dynamic> data,
+  });
+}
+
+@riverpod
+ApiService apiService(ApiServiceRef ref) {
+  final dio = ref.watch(dioClientProvider);
+  return ApiService(dio);
 }
 
 class AuthResponse {

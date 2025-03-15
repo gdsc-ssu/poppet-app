@@ -17,6 +17,8 @@ class HomePage extends ConsumerWidget {
     final recordState = viewModel.recordingState;
     final isRecording = viewModel.isRecording;
     final isCompleted = viewModel.isCompleted;
+    final isUploading = viewModel.isUploading;
+    final isUploaded = viewModel.isUploaded;
 
     // 상태에 따른 텍스트 설정
     String statusText = '';
@@ -24,6 +26,11 @@ class HomePage extends ConsumerWidget {
       statusText = '마이크 버튼을 누르고\n대화를 나눠보세요.';
     } else if (recordState == RecordingState.recording) {
       statusText = '대화를 그만하고 싶다면\n중지 버튼을 눌러주세요';
+    } else if (recordState == RecordingState.uploading) {
+      statusText = '녹음 파일을 서버로\n전송하는 중이에요';
+    } else if (recordState == RecordingState.uploaded) {
+      final chatResponse = viewModel.lastChatResponse;
+      statusText = chatResponse?.message ?? '뽀삐가 대답했어요!';
     } else {
       statusText = '뽀삐가 대답을\n생각하는 중이에요';
     }
@@ -34,6 +41,10 @@ class HomePage extends ConsumerWidget {
       imagePath = 'assets/images/basicpopet.png';
     } else if (recordState == RecordingState.recording) {
       imagePath = 'assets/images/listenPoppet.png';
+    } else if (recordState == RecordingState.uploading) {
+      imagePath = 'assets/images/poppet2.png';
+    } else if (recordState == RecordingState.uploaded) {
+      imagePath = 'assets/images/poppet.png';
     } else {
       imagePath = 'assets/images/poppet2.png';
     }
@@ -188,7 +199,49 @@ class HomePage extends ConsumerWidget {
           ),
         );
 
+      case RecordingState.uploading:
+        // 업로드 중 - 로딩 인디케이터
+        return Container(
+          width: 157.w,
+          height: 157.h,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(color: AppColors.primary, width: 2.w),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                spreadRadius: 0,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: CircularProgressIndicator(
+              color: AppColors.primary,
+              strokeWidth: 5.w,
+            ),
+          ),
+        );
+
+      case RecordingState.uploaded:
+        // 업로드 완료 - 체크 아이콘
+        return GestureDetector(
+          onTap: () => viewModel.toggleRecording(),
+          child: Container(
+            width: 157.w,
+            height: 157.h,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primary,
+            ),
+            child: Icon(Icons.check, color: Colors.white, size: 70.sp),
+          ),
+        );
+
       case RecordingState.completed:
+      default:
         // 녹음 완료 - 점 세 개 버튼
         return Container(
           width: 157.w,

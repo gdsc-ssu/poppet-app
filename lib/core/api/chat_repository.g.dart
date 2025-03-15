@@ -1,26 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'home_view_model.dart';
+part of 'chat_repository.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$homeViewModelHash() => r'351d51ded0c2bb0d30bd5287798d3741bb3bed02';
+String _$chatRepositoryHash() => r'3c3b8c6916c1e904091c11d73b9aa8e00ffa333c';
 
-/// See also [HomeViewModel].
-@ProviderFor(HomeViewModel)
-final homeViewModelProvider =
-    AutoDisposeAsyncNotifierProvider<HomeViewModel, void>.internal(
-  HomeViewModel.new,
-  name: r'homeViewModelProvider',
+/// See also [chatRepository].
+@ProviderFor(chatRepository)
+final chatRepositoryProvider = AutoDisposeProvider<ChatRepository>.internal(
+  chatRepository,
+  name: r'chatRepositoryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$homeViewModelHash,
+      : _$chatRepositoryHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$HomeViewModel = AutoDisposeAsyncNotifier<void>;
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef ChatRepositoryRef = AutoDisposeProviderRef<ChatRepository>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -8,9 +8,10 @@ class DioClient {
   static final Dio dio = Dio(
       BaseOptions(
         baseUrl:
-            'https://api.example.com', // TODO: Replace with your API base URL
-        connectTimeout: const Duration(seconds: 5),
-        receiveTimeout: const Duration(seconds: 3),
+            'https://poppet-sol4-server-162314042262.asia-northeast3.run.app',
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 30),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
