@@ -32,6 +32,14 @@ class DioClient {
   static Future<void> setToken(String token) async {
     dio.options.headers['Authorization'] = 'Bearer $token';
   }
+
+  static Future<void> setTokenIfAvailable(String? token) async {
+    if (token != null && token.isNotEmpty) {
+      dio.options.headers['Authorization'] = 'Bearer $token';
+    } else {
+      dio.options.headers.remove('Authorization');
+    }
+  }
 }
 
 @riverpod

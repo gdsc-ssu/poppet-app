@@ -56,6 +56,39 @@ class _ApiService implements ApiService {
   }
 
   @override
+  Future<AuthResponse> loginWithKakao(String code) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'code': code};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<AuthResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          '/auth/login/kakao',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late AuthResponse _value;
+    try {
+      _value = AuthResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<UserInfo> getUserInfo() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -90,11 +123,12 @@ class _ApiService implements ApiService {
 
   @override
   Future<ChatResponse> createChat({
-    required String fileNames,
     required List<MultipartFile> files,
+    String? name = '김준하',
   }) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'chat': fileNames};
+    final queryParameters = <String, dynamic>{r'name': name};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     final _data = FormData();
     _data.files.addAll(files.map((i) => MapEntry('chat', i)));
@@ -166,11 +200,10 @@ class _ApiService implements ApiService {
   @override
   Future<ChatResponse> setChatName({
     required String chatId,
-    required String name,
     required Map<String, dynamic> data,
   }) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'name': name};
+    final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(data);

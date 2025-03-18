@@ -62,87 +62,52 @@ class AuthNotifier extends StateNotifier<AuthState> {
     : super(AuthState.unauthenticated());
 
   Future<void> signInWithKakao(BuildContext context) async {
+    // 인가 코드 방식의 로그인 메서드를 사용
+    await signInWithKakaoAuthCode(context);
+  }
+
+  Future<void> signInWithKakaoAuthCode(BuildContext context) async {
     state = AuthState.loading();
 
     try {
-      OAuthToken token;
-      if (await isKakaoTalkInstalled()) {
-        token = await UserApi.instance.loginWithKakaoTalk();
-      } else {
-        token = await UserApi.instance.loginWithKakaoAccount();
-      }
+      // 카카오 인가 코드 방식으로 로그인 시도
+      final success = await _kakaoAuthService.signInWithKakaoAuthCode(context);
 
-      // 토큰 정보 로그 출력
-      debugPrint('토큰 : ${token}');
-      debugPrint('액세스 토큰: ${token.accessToken}');
-      debugPrint('리프레시 토큰: ${token.refreshToken}');
-      debugPrint('ID 토큰: ${token.idToken}');
-      debugPrint('==========================');
-
-      // Secure Storage에 토큰 저장
-      await SecureStorageUtils.setAccessToken(token.accessToken);
-      if (token.refreshToken != null) {
-        await SecureStorageUtils.setRefreshToken(token.refreshToken!);
-      }
-
-      // 백엔드 서버로 카카오 토큰 전송
-      try {
-        final authResponse = await ApiService(
-          DioClient.dio,
-        ).oAuthKakao({"accessToken": token.accessToken});
-
-        // 백엔드 토큰 정보 로그 출력
-        debugPrint('===== 백엔드 토큰 정보 =====');
-        debugPrint('백엔드 토큰: ${authResponse.accessToken.token}');
-        debugPrint('============================');
-
-        // 백엔드 토큰 설정
-        await DioClient.setToken(authResponse.accessToken.token);
-
-        // 사용자 정보 가져오기
+      if (success) {
         try {
-          // 백엔드에서 사용자 정보 가져오기
-          final userInfo = await ApiService(DioClient.dio).getUserInfo();
-          final loginInfoNotifier = _ref.read(loginInfoProvider.notifier);
-          loginInfoNotifier.setLoginInfo(userInfo);
+          // 백엔드 API 통신 제거 - 인가 코드 전송 이후 추가 API 호출 없음
 
-          // 카카오에서 사용자 정보 가져오기 (백업용)
-          final kakaoUser = await UserApi.instance.me();
-          await SecureStorageUtils.setUserId(kakaoUser.id.toString());
+          // 카카오에서 사용자 정보 가져오기
+          try {
+            final kakaoUser = await UserApi.instance.me();
+            await SecureStorageUtils.setUserId(kakaoUser.id.toString());
+            state = AuthState.authenticated(kakaoUser);
+          } catch (userError) {
+            debugPrint('카카오 사용자 정보 가져오기 실패: $userError');
+            // 카카오 사용자 정보 없이도 인증 상태로 설정
+            state = AuthState.authenticated(null);
+          }
 
-          state = AuthState.authenticated(kakaoUser);
-
-          // 로그인 성공 시 홈 화면으로 이동
+          // 로그인 성공 시 홈 화면으로 항상 이동
           if (context.mounted) {
+            // 기존 홈으로 가는 리스너 대신 즉시 홈으로 이동
             context.go('/home');
           }
         } catch (e) {
-          debugPrint('사용자 정보 가져오기 실패: $e');
-          state = AuthState.unauthenticated();
-        }
-      } catch (e) {
-        debugPrint('백엔드 서버 통신 실패: $e');
-
-        // 백엔드 서버 통신 실패 시에도 카카오 사용자 정보는 가져오기 시도
-        try {
-          final kakaoUser = await UserApi.instance.me();
-          await SecureStorageUtils.setUserId(kakaoUser.id.toString());
-          state = AuthState.authenticated(kakaoUser);
-
+          debugPrint('인증 후처리 실패: $e');
+          // 실패해도 인증 상태로 설정하고 홈으로 이동
+          state = AuthState.authenticated(null);
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('백엔드 서버 연결 실패. 일부 기능이 제한될 수 있습니다.')),
-            );
+            context.go('/home');
           }
-        } catch (userError) {
-          debugPrint('카카오 사용자 정보 가져오기 실패: $userError');
-          state = AuthState.unauthenticated();
         }
+      } else {
+        // 로그인 실패 처리 (이미 KakaoAuthService에서 스낵바 표시)
+        state = AuthState.unauthenticated();
       }
     } catch (error) {
       debugPrint('카카오 로그인 실패: $error');
       state = AuthState.unauthenticated();
-      context.go('/home');
       if (error is! PlatformException || error.code != 'CANCELED') {
         if (context.mounted) {
           ScaffoldMessenger.of(
@@ -175,7 +140,7 @@ class AuthState {
     return AuthState(isAuthenticated: false, isLoading: false);
   }
 
-  factory AuthState.authenticated(User user) {
+  factory AuthState.authenticated(User? user) {
     return AuthState(isAuthenticated: true, isLoading: false, user: user);
   }
 

@@ -15,14 +15,17 @@ abstract class ApiService {
   @POST('/auth/kakao')
   Future<AuthResponse> oAuthKakao(@Body() Map<String, dynamic> data);
 
+  @GET('/auth/login/kakao')
+  Future<AuthResponse> loginWithKakao(@Query('code') String code);
+
   @GET('/user/me')
   Future<UserInfo> getUserInfo();
 
   @POST('/chats')
   @MultiPart()
   Future<ChatResponse> createChat({
-    @Query('chat') required String fileNames,
     @Part(name: 'chat') required List<MultipartFile> files,
+    @Query('name') String? name = '김준하',
   });
 
   @PATCH('/chats/{chatId}')
@@ -34,7 +37,6 @@ abstract class ApiService {
   @POST('/chats/{chatId}/name')
   Future<ChatResponse> setChatName({
     @Path() required String chatId,
-    @Query('name') required String name,
     @Body() required Map<String, dynamic> data,
   });
 }

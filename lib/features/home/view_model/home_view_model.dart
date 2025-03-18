@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:pet/core/api/chat_repository.dart';
 import 'package:pet/core/api/models/chat_response.dart';
+import 'package:pet/core/provider/login_provider.dart';
 
 part 'home_view_model.g.dart';
 
@@ -24,7 +26,7 @@ class HomeViewModel extends _$HomeViewModel {
   Timer? _elapsedTimer;
   int _fileCounter = 0;
   RecordingState _recordingState = RecordingState.initial;
-  String _lastRecordingPath = '';
+  final List<File> _recordingFiles = [];
   int _elapsedSeconds = 0;
   ChatResponse? _lastChatResponse;
 
@@ -36,7 +38,21 @@ class HomeViewModel extends _$HomeViewModel {
       _recordingTimer?.cancel();
       _elapsedTimer?.cancel();
       _audioRecorder.dispose();
+      _cleanupTempFiles();
     });
+  }
+
+  // 임시 파일 정리
+  void _cleanupTempFiles() {
+    for (final file in _recordingFiles) {
+      if (file.existsSync()) {
+        try {
+          file.deleteSync();
+        } catch (e) {
+          print('임시 파일 삭제 실패: $e');
+        }
+      }
+    }
   }
 
   Future<void> toggleRecording() async {
@@ -47,6 +63,7 @@ class HomeViewModel extends _$HomeViewModel {
     } else {
       // 녹음 완료 상태에서 다시 초기 상태로 돌아감
       _recordingState = RecordingState.initial;
+      _recordingFiles.clear();
       state = const AsyncValue.data(null);
     }
   }
@@ -54,7 +71,6 @@ class HomeViewModel extends _$HomeViewModel {
   Future<void> requestMicrophonePermission() async {
     PermissionStatus status = await Permission.microphone.status;
     if (status.isDenied) {
-      // We didn't ask for permission yet or the permission has been denied before but not permanently.
       await Permission.microphone.request();
     }
   }
@@ -78,7 +94,9 @@ class HomeViewModel extends _$HomeViewModel {
       return;
     }
 
-    final path = '/Users/junha/recording_${_fileCounter}.flac';
+    // 임시 디렉토리 가져오기
+    final tempDir = await getTemporaryDirectory();
+    final filePath = '${tempDir.path}/recording_$_fileCounter.flac';
 
     try {
       await _audioRecorder.start(
@@ -87,7 +105,7 @@ class HomeViewModel extends _$HomeViewModel {
           bitRate: 128000,
           sampleRate: 44100,
         ),
-        path: path,
+        path: filePath,
       );
 
       _recordingState = RecordingState.recording;
@@ -116,18 +134,19 @@ class HomeViewModel extends _$HomeViewModel {
 
     if (_recordingState == RecordingState.recording) {
       try {
-        final path = await _audioRecorder.stop();
+        final filePath = await _audioRecorder.stop();
         _recordingState = RecordingState.completed;
         _fileCounter++;
         _elapsedSeconds = 0;
         state = const AsyncValue.data(null);
 
-        if (path != null) {
-          _lastRecordingPath = path;
-          print('Recording saved at: $path');
+        if (filePath != null) {
+          final recordedFile = File(filePath);
+          _recordingFiles.add(recordedFile);
+          print('Recording saved at: $filePath');
 
           // 녹음 파일 업로드
-          await _uploadRecording(path);
+          await _uploadRecordings();
         }
       } catch (e) {
         print('Stop recording error: $e');
@@ -135,17 +154,36 @@ class HomeViewModel extends _$HomeViewModel {
     }
   }
 
-  Future<void> _uploadRecording(String audioPath) async {
+  Future<void> _uploadRecordings() async {
+    if (_recordingFiles.isEmpty) {
+      print('업로드할 녹음 파일이 없습니다.');
+      return;
+    }
+
     try {
       _recordingState = RecordingState.uploading;
       state = const AsyncValue.data(null);
 
-      final response = await _chatRepository.uploadAudio(audioPath);
+      // 로그인한 사용자 이름 가져오기
+      final loginInfo = ref.read(loginInfoProvider);
+      final userName = loginInfo?.name;
+
+      print('카카오 로그인 정보: $userName, 파일 수: ${_recordingFiles.length}');
+
+      // 여러 FLAC 오디오 파일 업로드
+      final response = await _chatRepository.uploadMultipleFlacFiles(
+        _recordingFiles,
+        name: userName,
+      );
 
       if (response != null) {
         _lastChatResponse = response;
         _recordingState = RecordingState.uploaded;
         print('Audio uploaded successfully: ${response.message}');
+
+        // 업로드 성공 후 임시 파일 정리
+        _cleanupTempFiles();
+        _recordingFiles.clear();
       } else {
         _recordingState = RecordingState.completed;
         print('Failed to upload audio');
@@ -164,7 +202,7 @@ class HomeViewModel extends _$HomeViewModel {
   bool get isUploading => _recordingState == RecordingState.uploading;
   bool get isUploaded => _recordingState == RecordingState.uploaded;
   RecordingState get recordingState => _recordingState;
-  String get lastRecordingPath => _lastRecordingPath;
+  List<File> get recordingFiles => List.unmodifiable(_recordingFiles);
   ChatResponse? get lastChatResponse => _lastChatResponse;
   String get elapsedTime {
     final minutes = (_elapsedSeconds ~/ 60).toString().padLeft(2, '0');

@@ -17,123 +17,50 @@ class ChatRepository {
 
   ChatRepository(this._apiService, this._appStorage);
 
-  /// 텍스트 메시지로 채팅 생성
-  Future<ChatResponse?> createChat(
-    String message, {
-    List<File>? chatFiles,
+  /// ✅ 여러 FLAC 오디오 파일 업로드
+  Future<ChatResponse?> uploadMultipleFlacFiles(
+    List<File> flacFiles, {
+    String? name,
   }) async {
     try {
-      // 파일 처리
-      String fileNames = '';
       List<MultipartFile> multipartFiles = [];
 
-      if (chatFiles != null && chatFiles.isNotEmpty) {
-        List<String> fileNamesList = [];
-
-        for (final file in chatFiles) {
-          if (file.existsSync()) {
-            final fileName = file.path.split('/').last;
-            fileNamesList.add(fileName);
-
-            // 파일을 MultipartFile로 변환
-            final multipartFile = await MultipartFile.fromFile(
-              file.path,
-              filename: fileName,
-              contentType: MediaType.parse(_getMimeType(fileName)),
-            );
-            multipartFiles.add(multipartFile);
-          }
+      for (final file in flacFiles) {
+        if (!file.existsSync()) {
+          print('FLAC 파일이 존재하지 않습니다: ${file.path}');
+          continue;
         }
 
-        // 파일 이름들을 쉼표로 구분하여 하나의 문자열로 합침
-        fileNames = fileNamesList.join(',');
+        final fileName = file.path.split('/').last;
+
+        // FLAC 파일을 MultipartFile로 변환
+        final multipartFile = await MultipartFile.fromFile(
+          file.path,
+          filename: fileName,
+          contentType: MediaType('audio', 'flac'), // ✅ FLAC 파일 MIME 타입 지정
+        );
+
+        multipartFiles.add(multipartFile);
       }
 
-      // 파일 이름은 쿼리 파라미터로, 파일 데이터는 multipart/form-data 형식으로 전송
+      if (multipartFiles.isEmpty) {
+        throw Exception('업로드할 FLAC 파일이 없습니다.');
+      }
+
+      // /chats 엔드포인트를 사용하여 오디오 파일들 업로드
       final response = await _apiService.createChat(
-        fileNames: fileNames,
         files: multipartFiles,
-      );
-
-      return response;
-    } catch (e) {
-      print('채팅 생성 실패: $e');
-      return null;
-    }
-  }
-
-  /// 오디오 파일 업로드
-  Future<ChatResponse?> uploadAudio(String audioPath) async {
-    try {
-      final file = File(audioPath);
-      if (!file.existsSync()) {
-        throw Exception('오디오 파일이 존재하지 않습니다: $audioPath');
-      }
-
-      final fileName = audioPath.split('/').last;
-
-      // 오디오 파일을 MultipartFile로 변환
-      final audioFile = await MultipartFile.fromFile(
-        audioPath,
-        filename: fileName,
-        contentType: MediaType.parse(_getMimeType(fileName)),
-      );
-
-      // /chats 엔드포인트를 사용하여 오디오 파일 업로드
-      final response = await _apiService.createChat(
-        fileNames: fileName,
-        files: [audioFile],
-      );
-
-      return response;
-    } catch (e) {
-      print('오디오 업로드 실패: $e');
-      return null;
-    }
-  }
-
-  /// 채팅 이름 설정
-  Future<ChatResponse?> setChatName(String chatId, String name) async {
-    try {
-      // 로그인한 사용자 ID가 있으면 사용, 없으면 'guest' 사용
-      final userId = _appStorage.getUserId() ?? 'guest';
-
-      // URL 쿼리 파라미터 형식으로 채팅 이름 설정
-      final response = await _apiService.setChatName(
-        chatId: chatId,
         name: name,
-        data: {'userId': userId},
       );
 
       return response;
     } catch (e) {
-      print('채팅 이름 설정 실패: $e');
+      print('FLAC 파일 업로드 실패: $e');
       return null;
     }
   }
 
-  /// 채팅 업데이트
-  Future<ChatResponse?> updateChat(
-    String chatId,
-    Map<String, dynamic> data,
-  ) async {
-    try {
-      // 로그인한 사용자 ID가 있으면 사용, 없으면 'guest' 사용
-      final userId = _appStorage.getUserId() ?? 'guest';
-
-      // userId 추가
-      data['userId'] = userId;
-
-      final response = await _apiService.updateChat(chatId, data);
-
-      return response;
-    } catch (e) {
-      print('채팅 업데이트 실패: $e');
-      return null;
-    }
-  }
-
-  // 파일 확장자에 따른 MIME 타입 반환
+  /// 파일 확장자에 따른 MIME 타입 반환
   String _getMimeType(String fileName) {
     final extension = fileName.split('.').last.toLowerCase();
     switch (extension) {
@@ -145,7 +72,7 @@ class ChatRepository {
       case 'gif':
         return 'image/gif';
       case 'flac':
-        return 'audio/flac';
+        return 'audio/flac'; // ✅ FLAC MIME 타입 설정
       case 'mp3':
         return 'audio/mpeg';
       case 'wav':

@@ -12,8 +12,8 @@ void main() async {
 
   // 카카오 SDK 초기화
   KakaoSdk.init(
-    nativeAppKey: 'c3595bb22d50be34ccb16b5c34a19b73',
-    javaScriptAppKey: '5cdba5181f32c895e85625f3a050348e', // 자바스크립트 키
+    nativeAppKey: 'a1e5cdadeae290397049e5b6c51829ca',
+    javaScriptAppKey: '2707b64775ef31cc6aeae01392466da6', // 자바스크립트 키
   );
 
   runApp(const ProviderScope(child: MyApp()));

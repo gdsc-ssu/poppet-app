@@ -28,6 +28,8 @@
 		<array>
 			<string>kakaokompassauth</string>
 			<string>kakaolink</string>
+			<string>storykompassauth</string>
+			<string>kakaotalk-5.9.7</string>
 		</array>
 		<key>CFBundleURLTypes</key>
 		<array>
@@ -36,7 +38,7 @@
 				<string>Editor</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
-					<string>kakaoc3595bb22d50be34ccb16b5c34a19b73</string>
+					<string>kakaoa1e5cdadeae290397049e5b6c51829ca</string>
 				</array>
 			</dict>
 		</array>

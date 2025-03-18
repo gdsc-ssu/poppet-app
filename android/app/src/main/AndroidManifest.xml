@@ -30,7 +30,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="kakaoc3595bb22d50be34ccb16b5c34a19b73" android:host="oauth" />
+                <data android:scheme="kakaoa1e5cdadeae290397049e5b6c51829ca" android:host="oauth" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

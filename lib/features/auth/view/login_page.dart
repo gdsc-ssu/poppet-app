@@ -14,22 +14,9 @@ class LoginPage extends ConsumerWidget {
 
     // 로그인 상태가 변경되면 홈 화면으로 이동
     ref.listen(authStateProvider, (previous, current) {
-      // 이전 상태가 로딩 중이었고, 현재 상태가 인증됨인 경우에만 홈으로 이동
-      if (previous != null &&
-          previous.isLoading &&
-          !current.isLoading &&
-          current.isAuthenticated) {
-        // 사용자 정보 로그 출력
-        final user = current.user;
-        debugPrint('로그인 성공: 사용자 정보');
-        debugPrint('ID: ${user?.id}');
-        debugPrint('닉네임: ${user?.kakaoAccount?.profile?.nickname}');
-        debugPrint('이메일: ${user?.kakaoAccount?.email}');
-        debugPrint('프로필 이미지: ${user?.kakaoAccount?.profile?.profileImageUrl}');
-        debugPrint('성별: ${user?.kakaoAccount?.gender}');
-        debugPrint('연령대: ${user?.kakaoAccount?.ageRange}');
-        debugPrint('전체 정보: $user');
-
+      // 현재 상태가 인증됨인 경우 홈으로 이동
+      if (current.isAuthenticated && !current.isLoading) {
+        // 로그인 성공 시 항상 홈으로 이동
         context.go('/home');
       }
     });
@@ -63,8 +50,10 @@ class LoginPage extends ConsumerWidget {
               const Spacer(),
               InkWell(
                 onTap: () {
-                  // 카카오 로그인 실행
-                  ref.read(authStateProvider.notifier).signInWithKakao(context);
+                  // 카카오 로그인 실행 (인가 코드 방식)
+                  ref
+                      .read(authStateProvider.notifier)
+                      .signInWithKakaoAuthCode(context);
                 },
                 child: Container(
                   width: double.infinity,
