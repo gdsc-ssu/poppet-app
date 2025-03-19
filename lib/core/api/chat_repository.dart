@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -49,9 +50,17 @@ class ChatRepository {
 
       // /chats 엔드포인트를 사용하여 오디오 파일들 업로드
       final response = await _apiService.createChat(
-        files: multipartFiles,
+        chat: multipartFiles,
         name: name,
       );
+      // ⚠️ 여기서 response가 null인지 체크
+      if (response == null) {
+        throw Exception("서버에서 응답을 반환하지 않았습니다.");
+      }
+
+      // ⚠️ 서버 응답 데이터 체크
+      final responseData = response.data ?? "empty"; // 기본값 설정
+      print("서버 응답 데이터: $responseData");
 
       return response;
     } catch (e) {

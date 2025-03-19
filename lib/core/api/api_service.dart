@@ -24,7 +24,7 @@ abstract class ApiService {
   @POST('/chats')
   @MultiPart()
   Future<ChatResponse> createChat({
-    @Part(name: 'chat') required List<MultipartFile> files,
+    @Part(name: 'chat') required List<MultipartFile> chat,
     @Query('name') String? name = '김준하',
   });
 

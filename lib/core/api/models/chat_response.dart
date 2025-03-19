@@ -7,11 +7,10 @@ part 'chat_response.freezed.dart';
 @freezed
 class ChatResponse with _$ChatResponse {
   const factory ChatResponse({
-    required String id,
+    required bool is_success,
+    required int code,
     required String message,
-    String? audioUrl,
-    List<ChatItem>? chat,
-    String? name,
+    String? data,
   }) = _ChatResponse;
 
   factory ChatResponse.fromJson(Map<String, dynamic> json) =>

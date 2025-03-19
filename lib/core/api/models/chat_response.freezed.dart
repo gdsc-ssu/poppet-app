@@ -20,11 +20,10 @@ ChatResponse _$ChatResponseFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$ChatResponse {
-  String get id => throw _privateConstructorUsedError;
+  bool get is_success => throw _privateConstructorUsedError;
+  int get code => throw _privateConstructorUsedError;
   String get message => throw _privateConstructorUsedError;
-  String? get audioUrl => throw _privateConstructorUsedError;
-  List<ChatItem>? get chat => throw _privateConstructorUsedError;
-  String? get name => throw _privateConstructorUsedError;
+  String? get data => throw _privateConstructorUsedError;
 
   /// Serializes this ChatResponse to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -42,12 +41,7 @@ abstract class $ChatResponseCopyWith<$Res> {
           ChatResponse value, $Res Function(ChatResponse) then) =
       _$ChatResponseCopyWithImpl<$Res, ChatResponse>;
   @useResult
-  $Res call(
-      {String id,
-      String message,
-      String? audioUrl,
-      List<ChatItem>? chat,
-      String? name});
+  $Res call({bool is_success, int code, String message, String? data});
 }
 
 /// @nodoc
@@ -65,32 +59,27 @@ class _$ChatResponseCopyWithImpl<$Res, $Val extends ChatResponse>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
+    Object? is_success = null,
+    Object? code = null,
     Object? message = null,
-    Object? audioUrl = freezed,
-    Object? chat = freezed,
-    Object? name = freezed,
+    Object? data = freezed,
   }) {
     return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
+      is_success: null == is_success
+          ? _value.is_success
+          : is_success // ignore: cast_nullable_to_non_nullable
+              as bool,
+      code: null == code
+          ? _value.code
+          : code // ignore: cast_nullable_to_non_nullable
+              as int,
       message: null == message
           ? _value.message
           : message // ignore: cast_nullable_to_non_nullable
               as String,
-      audioUrl: freezed == audioUrl
-          ? _value.audioUrl
-          : audioUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
-      chat: freezed == chat
-          ? _value.chat
-          : chat // ignore: cast_nullable_to_non_nullable
-              as List<ChatItem>?,
-      name: freezed == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
+      data: freezed == data
+          ? _value.data
+          : data // ignore: cast_nullable_to_non_nullable
               as String?,
     ) as $Val);
   }
@@ -104,12 +93,7 @@ abstract class _$$ChatResponseImplCopyWith<$Res>
       __$$ChatResponseImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String id,
-      String message,
-      String? audioUrl,
-      List<ChatItem>? chat,
-      String? name});
+  $Res call({bool is_success, int code, String message, String? data});
 }
 
 /// @nodoc
@@ -125,32 +109,27 @@ class __$$ChatResponseImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
+    Object? is_success = null,
+    Object? code = null,
     Object? message = null,
-    Object? audioUrl = freezed,
-    Object? chat = freezed,
-    Object? name = freezed,
+    Object? data = freezed,
   }) {
     return _then(_$ChatResponseImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
+      is_success: null == is_success
+          ? _value.is_success
+          : is_success // ignore: cast_nullable_to_non_nullable
+              as bool,
+      code: null == code
+          ? _value.code
+          : code // ignore: cast_nullable_to_non_nullable
+              as int,
       message: null == message
           ? _value.message
           : message // ignore: cast_nullable_to_non_nullable
               as String,
-      audioUrl: freezed == audioUrl
-          ? _value.audioUrl
-          : audioUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
-      chat: freezed == chat
-          ? _value._chat
-          : chat // ignore: cast_nullable_to_non_nullable
-              as List<ChatItem>?,
-      name: freezed == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
+      data: freezed == data
+          ? _value.data
+          : data // ignore: cast_nullable_to_non_nullable
               as String?,
     ));
   }
@@ -160,38 +139,26 @@ class __$$ChatResponseImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$ChatResponseImpl implements _ChatResponse {
   const _$ChatResponseImpl(
-      {required this.id,
+      {required this.is_success,
+      required this.code,
       required this.message,
-      this.audioUrl,
-      final List<ChatItem>? chat,
-      this.name})
-      : _chat = chat;
+      this.data});
 
   factory _$ChatResponseImpl.fromJson(Map<String, dynamic> json) =>
       _$$ChatResponseImplFromJson(json);
 
   @override
-  final String id;
+  final bool is_success;
+  @override
+  final int code;
   @override
   final String message;
   @override
-  final String? audioUrl;
-  final List<ChatItem>? _chat;
-  @override
-  List<ChatItem>? get chat {
-    final value = _chat;
-    if (value == null) return null;
-    if (_chat is EqualUnmodifiableListView) return _chat;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(value);
-  }
-
-  @override
-  final String? name;
+  final String? data;
 
   @override
   String toString() {
-    return 'ChatResponse(id: $id, message: $message, audioUrl: $audioUrl, chat: $chat, name: $name)';
+    return 'ChatResponse(is_success: $is_success, code: $code, message: $message, data: $data)';
   }
 
   @override
@@ -199,18 +166,16 @@ class _$ChatResponseImpl implements _ChatResponse {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ChatResponseImpl &&
-            (identical(other.id, id) || other.id == id) &&
+            (identical(other.is_success, is_success) ||
+                other.is_success == is_success) &&
+            (identical(other.code, code) || other.code == code) &&
             (identical(other.message, message) || other.message == message) &&
-            (identical(other.audioUrl, audioUrl) ||
-                other.audioUrl == audioUrl) &&
-            const DeepCollectionEquality().equals(other._chat, _chat) &&
-            (identical(other.name, name) || other.name == name));
+            (identical(other.data, data) || other.data == data));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, message, audioUrl,
-      const DeepCollectionEquality().hash(_chat), name);
+  int get hashCode => Object.hash(runtimeType, is_success, code, message, data);
 
   /// Create a copy of ChatResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -230,25 +195,22 @@ class _$ChatResponseImpl implements _ChatResponse {
 
 abstract class _ChatResponse implements ChatResponse {
   const factory _ChatResponse(
-      {required final String id,
+      {required final bool is_success,
+      required final int code,
       required final String message,
-      final String? audioUrl,
-      final List<ChatItem>? chat,
-      final String? name}) = _$ChatResponseImpl;
+      final String? data}) = _$ChatResponseImpl;
 
   factory _ChatResponse.fromJson(Map<String, dynamic> json) =
       _$ChatResponseImpl.fromJson;
 
   @override
-  String get id;
+  bool get is_success;
+  @override
+  int get code;
   @override
   String get message;
   @override
-  String? get audioUrl;
-  @override
-  List<ChatItem>? get chat;
-  @override
-  String? get name;
+  String? get data;
 
   /// Create a copy of ChatResponse
   /// with the given fields replaced by the non-null parameter values.

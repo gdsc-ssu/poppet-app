@@ -8,22 +8,18 @@ part of 'chat_response.dart';
 
 _$ChatResponseImpl _$$ChatResponseImplFromJson(Map<String, dynamic> json) =>
     _$ChatResponseImpl(
-      id: json['id'] as String,
+      is_success: json['is_success'] as bool,
+      code: (json['code'] as num).toInt(),
       message: json['message'] as String,
-      audioUrl: json['audioUrl'] as String?,
-      chat: (json['chat'] as List<dynamic>?)
-          ?.map((e) => ChatItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      name: json['name'] as String?,
+      data: json['data'] as String?,
     );
 
 Map<String, dynamic> _$$ChatResponseImplToJson(_$ChatResponseImpl instance) =>
     <String, dynamic>{
-      'id': instance.id,
+      'is_success': instance.is_success,
+      'code': instance.code,
       'message': instance.message,
-      'audioUrl': instance.audioUrl,
-      'chat': instance.chat,
-      'name': instance.name,
+      'data': instance.data,
     };
 
 _$ChatItemImpl _$$ChatItemImplFromJson(Map<String, dynamic> json) =>
