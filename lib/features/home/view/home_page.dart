@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_style.dart';
+import '../../../core/utils/audio_utils.dart';
 import '../view_model/home_view_model.dart';
 
 class HomePage extends ConsumerWidget {
@@ -96,6 +97,49 @@ class HomePage extends ConsumerWidget {
                   children: [
                     // 캐릭터 이미지
                     Image.asset(imagePath, width: 366.w),
+
+                    // 오디오 응답이 있을 경우 재생 버튼 추가
+                    if (isUploaded && viewModel.lastChatResponse?.data != null)
+                      Positioned(
+                        bottom: 20.h,
+                        right: 20.w,
+                        child: GestureDetector(
+                          onTap: () async {
+                            final data = viewModel.lastChatResponse?.data;
+                            if (data != null && data.isNotEmpty) {
+                              try {
+                                await AudioUtils.playBase64Audio(data);
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('오디오 재생 중 오류가 발생했습니다: $e'),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: Container(
+                            width: 60.w,
+                            height: 60.h,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.volume_up,
+                              color: Colors.white,
+                              size: 32.sp,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

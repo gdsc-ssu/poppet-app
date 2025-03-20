@@ -59,8 +59,8 @@ class ChatRepository {
       }
 
       // ⚠️ 서버 응답 데이터 체크
-      final responseData = response.data ?? "empty"; // 기본값 설정
-      print("서버 응답 데이터: $responseData");
+      final responseData = response.data ?? "empty";
+      print("서버 응답 데이터 존재 여부: ${response.data != null}");
 
       return response;
     } catch (e) {

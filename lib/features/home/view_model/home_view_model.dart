@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:pet/core/api/chat_repository.dart';
 import 'package:pet/core/api/models/chat_response.dart';
 import 'package:pet/core/provider/login_provider.dart';
+import 'package:pet/core/utils/audio_utils.dart';
 
 part 'home_view_model.g.dart';
 
@@ -184,6 +185,15 @@ class HomeViewModel extends _$HomeViewModel {
         // 업로드 성공 후 임시 파일 정리
         _cleanupTempFiles();
         _recordingFiles.clear();
+
+        // 응답에 base64 데이터가 있으면 오디오 재생
+        if (response.data != null && response.data!.isNotEmpty) {
+          try {
+            await AudioUtils.playBase64Audio(response.data!);
+          } catch (e) {
+            print('Audio playback error: $e');
+          }
+        }
       } else {
         _recordingState = RecordingState.completed;
         print('Failed to upload audio');

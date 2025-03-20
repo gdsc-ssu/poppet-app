@@ -67,6 +67,7 @@ dependencies:
   flutter_secure_storage: ^8.1.0
   flutter_svg: ^2.0.17 # SVG 지원
   another_flutter_splash_screen: ^1.2.1 # 스플래시 화면
+  just_audio: ^0.9.46
 
 dev_dependencies:
   flutter_test:
