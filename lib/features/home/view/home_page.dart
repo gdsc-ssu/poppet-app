@@ -7,6 +7,10 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_style.dart';
 import '../../../core/utils/audio_utils.dart';
 import '../view_model/home_view_model.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+
+// 오디오 재생 중인지 관리하는 Provider
+final isPlayingAudioProvider = StateProvider<bool>((ref) => false);
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -20,32 +24,32 @@ class HomePage extends ConsumerWidget {
     final isCompleted = viewModel.isCompleted;
     final isUploading = viewModel.isUploading;
     final isUploaded = viewModel.isUploaded;
+    final isPlayingAudio = ref.watch(isPlayingAudioProvider);
 
     // 상태에 따른 텍스트 설정
     String statusText = '';
-    if (recordState == RecordingState.initial) {
+    if (isPlayingAudio) {
+      statusText = '뽀삐가 대답을\n생각하는 중이에요';
+    } else if (recordState == RecordingState.initial) {
       statusText = '마이크 버튼을 누르고\n대화를 나눠보세요.';
     } else if (recordState == RecordingState.recording) {
       statusText = '대화를 그만하고 싶다면\n중지 버튼을 눌러주세요';
     } else if (recordState == RecordingState.uploading) {
       statusText = '녹음 파일을 서버로\n전송하는 중이에요';
-    } else if (recordState == RecordingState.uploaded) {
-      final chatResponse = viewModel.lastChatResponse;
-      statusText = chatResponse?.message ?? '뽀삐가 대답했어요!';
     } else {
       statusText = '뽀삐가 대답을\n생각하는 중이에요';
     }
 
     // 상태에 따른 이미지 설정
     String imagePath = '';
-    if (recordState == RecordingState.initial) {
+    if (isPlayingAudio) {
+      imagePath = 'assets/images/basicpopet.png'; // 오디오 재생 중 이미지
+    } else if (recordState == RecordingState.initial) {
       imagePath = 'assets/images/basicpopet.png';
     } else if (recordState == RecordingState.recording) {
       imagePath = 'assets/images/listenPoppet.png';
     } else if (recordState == RecordingState.uploading) {
       imagePath = 'assets/images/poppet2.png';
-    } else if (recordState == RecordingState.uploaded) {
-      imagePath = 'assets/images/poppet.png';
     } else {
       imagePath = 'assets/images/poppet2.png';
     }
@@ -85,7 +89,7 @@ class HomePage extends ConsumerWidget {
                 padding: EdgeInsets.only(top: 34.h, left: 32.w),
                 child: Text(statusText, style: AppTextStyle.siwoo_32_regular),
               ),
-              isCompleted || isRecording
+              isCompleted || isRecording || isUploading || isUploaded
                   ? SizedBox()
                   : Container(margin: EdgeInsets.only(top: 30.h)),
               isRecording
@@ -97,49 +101,6 @@ class HomePage extends ConsumerWidget {
                   children: [
                     // 캐릭터 이미지
                     Image.asset(imagePath, width: 366.w),
-
-                    // 오디오 응답이 있을 경우 재생 버튼 추가
-                    if (isUploaded && viewModel.lastChatResponse?.data != null)
-                      Positioned(
-                        bottom: 20.h,
-                        right: 20.w,
-                        child: GestureDetector(
-                          onTap: () async {
-                            final data = viewModel.lastChatResponse?.data;
-                            if (data != null && data.isNotEmpty) {
-                              try {
-                                await AudioUtils.playBase64Audio(data);
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('오디오 재생 중 오류가 발생했습니다: $e'),
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                          child: Container(
-                            width: 60.w,
-                            height: 60.h,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 6,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              Icons.volume_up,
-                              color: Colors.white,
-                              size: 32.sp,
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -184,7 +145,12 @@ class HomePage extends ConsumerWidget {
             top: 500.sp,
             left: 0,
             right: 0,
-            child: Center(child: _buildButton(recordState, viewModel)),
+            child: Center(
+              child:
+                  isPlayingAudio
+                      ? _buildPlayingButton(viewModel)
+                      : _buildButton(recordState, viewModel),
+            ),
           ),
         ],
       ),
@@ -248,6 +214,7 @@ class HomePage extends ConsumerWidget {
         return Container(
           width: 157.w,
           height: 157.h,
+          padding: EdgeInsets.only(top: 10.h),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.white,
@@ -262,25 +229,44 @@ class HomePage extends ConsumerWidget {
             ],
           ),
           child: Center(
-            child: CircularProgressIndicator(
+            child: LoadingAnimationWidget.waveDots(
               color: AppColors.primary,
-              strokeWidth: 5.w,
+              size: 100.sp,
             ),
           ),
         );
 
       case RecordingState.uploaded:
-        // 업로드 완료 - 체크 아이콘
-        return GestureDetector(
-          onTap: () => viewModel.toggleRecording(),
-          child: Container(
-            width: 157.w,
-            height: 157.h,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.primary,
+        // 업로드 완료 - 회색 마이크 버튼
+        return Container(
+          height: 157.h,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(color: AppColors.primary, width: 2.w),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                spreadRadius: 0,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => viewModel.toggleRecording(),
+              customBorder: CircleBorder(),
+              child: Center(
+                child: Image.asset(
+                  'assets/images/greymic.png',
+                  width: 61.w,
+                  height: 86.h,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
-            child: Icon(Icons.check, color: Colors.white, size: 70.sp),
           ),
         );
 
@@ -317,5 +303,40 @@ class HomePage extends ConsumerWidget {
           ),
         );
     }
+  }
+
+  // 오디오 재생 중일 때 표시되는 버튼
+  Widget _buildPlayingButton(HomeViewModel viewModel) {
+    return Container(
+      height: 157.h,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(color: AppColors.primary, width: 2.w),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 0,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => viewModel.isCompleted,
+          customBorder: CircleBorder(),
+          child: Center(
+            child: Image.asset(
+              'assets/images/greymic.png',
+              width: 61.w,
+              height: 86.h,
+              color: AppColors.grey,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

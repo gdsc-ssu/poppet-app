@@ -8,6 +8,7 @@ import 'package:pet/core/api/chat_repository.dart';
 import 'package:pet/core/api/models/chat_response.dart';
 import 'package:pet/core/provider/login_provider.dart';
 import 'package:pet/core/utils/audio_utils.dart';
+import '../view/home_page.dart'; // isPlayingAudioProvider 가져오기
 
 part 'home_view_model.g.dart';
 
@@ -179,7 +180,7 @@ class HomeViewModel extends _$HomeViewModel {
 
       if (response != null) {
         _lastChatResponse = response;
-        _recordingState = RecordingState.uploaded;
+
         print('Audio uploaded successfully: ${response.message}');
 
         // 업로드 성공 후 임시 파일 정리
@@ -189,10 +190,23 @@ class HomeViewModel extends _$HomeViewModel {
         // 응답에 base64 데이터가 있으면 오디오 재생
         if (response.data != null && response.data!.isNotEmpty) {
           try {
+            // 재생 상태 설정
+            ref.read(isPlayingAudioProvider.notifier).state = true;
+            print('Playing audio from response data');
+
+            // 오디오 재생
             await AudioUtils.playBase64Audio(response.data!);
+            print('Audio played successfully');
+
+            // 재생 완료 후 상태 초기화
+            ref.read(isPlayingAudioProvider.notifier).state = false;
           } catch (e) {
+            // 오류 발생 시 상태 초기화
+            ref.read(isPlayingAudioProvider.notifier).state = false;
             print('Audio playback error: $e');
           }
+        } else {
+          print('No audio data in response');
         }
       } else {
         _recordingState = RecordingState.completed;
@@ -218,5 +232,13 @@ class HomeViewModel extends _$HomeViewModel {
     final minutes = (_elapsedSeconds ~/ 60).toString().padLeft(2, '0');
     final seconds = (_elapsedSeconds % 60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
+  }
+
+  // 초기 상태로 화면 리셋
+  void resetToInitial() {
+    _recordingState = RecordingState.initial;
+    _recordingFiles.clear();
+    _lastChatResponse = null;
+    state = const AsyncValue.data(null);
   }
 }
