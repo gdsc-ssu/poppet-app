@@ -39,6 +39,15 @@ abstract class ApiService {
     @Path() required String chatId,
     @Body() required Map<String, dynamic> data,
   });
+
+  @GET('/emails/period')
+  Future<dynamic> getEmailPeriod({@Query('name') required String name});
+
+  @PATCH('/emails/period')
+  Future<dynamic> updateEmailPeriod({
+    @Query('name') required String name,
+    @Query('period') required int period,
+  });
 }
 
 @riverpod
