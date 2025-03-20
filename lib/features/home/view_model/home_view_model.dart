@@ -192,6 +192,7 @@ class HomeViewModel extends _$HomeViewModel {
           try {
             // 재생 상태 설정
             ref.read(isPlayingAudioProvider.notifier).state = true;
+
             print('Playing audio from response data');
 
             // 오디오 재생
@@ -200,6 +201,7 @@ class HomeViewModel extends _$HomeViewModel {
 
             // 재생 완료 후 상태 초기화
             ref.read(isPlayingAudioProvider.notifier).state = false;
+            resetToInitial();
           } catch (e) {
             // 오류 발생 시 상태 초기화
             ref.read(isPlayingAudioProvider.notifier).state = false;

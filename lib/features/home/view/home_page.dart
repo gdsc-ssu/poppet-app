@@ -8,6 +8,7 @@ import '../../../core/theme/app_text_style.dart';
 import '../../../core/utils/audio_utils.dart';
 import '../view_model/home_view_model.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:lottie/lottie.dart';
 
 // 오디오 재생 중인지 관리하는 Provider
 final isPlayingAudioProvider = StateProvider<bool>((ref) => false);
@@ -29,7 +30,7 @@ class HomePage extends ConsumerWidget {
     // 상태에 따른 텍스트 설정
     String statusText = '';
     if (isPlayingAudio) {
-      statusText = '뽀삐가 대답을\n생각하는 중이에요';
+      statusText = '뽀삐가 대답하는 중이에요';
     } else if (recordState == RecordingState.initial) {
       statusText = '마이크 버튼을 누르고\n대화를 나눠보세요.';
     } else if (recordState == RecordingState.recording) {
@@ -94,6 +95,9 @@ class HomePage extends ConsumerWidget {
                   : Container(margin: EdgeInsets.only(top: 30.h)),
               isRecording
                   ? Container(margin: EdgeInsets.only(top: 15.h))
+                  : SizedBox(),
+              isPlayingAudio
+                  ? Container(margin: EdgeInsets.only(top: 75.h))
                   : SizedBox(),
               Expanded(
                 child: Stack(
@@ -214,25 +218,12 @@ class HomePage extends ConsumerWidget {
         return Container(
           width: 157.w,
           height: 157.h,
-          padding: EdgeInsets.only(top: 10.h),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white,
-            border: Border.all(color: AppColors.primary, width: 2.w),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                spreadRadius: 0,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Center(
-            child: LoadingAnimationWidget.waveDots(
-              color: AppColors.primary,
-              size: 100.sp,
-            ),
+
+          child: Lottie.asset(
+            'assets/images/flow2.json',
+            width: 157.w,
+            height: 157.h,
+            fit: BoxFit.cover,
           ),
         );
 
@@ -260,10 +251,10 @@ class HomePage extends ConsumerWidget {
               customBorder: CircleBorder(),
               child: Center(
                 child: Image.asset(
-                  'assets/images/greymic.png',
+                  'assets/images/microphone.png',
                   width: 61.w,
                   height: 86.h,
-                  color: AppColors.primary,
+                  color: AppColors.grey,
                 ),
               ),
             ),
