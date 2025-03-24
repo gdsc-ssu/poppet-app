@@ -77,17 +77,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         try {
           // 백엔드 API 통신 제거 - 인가 코드 전송 이후 추가 API 호출 없음
 
-          // 카카오에서 사용자 정보 가져오기
-          try {
-            final kakaoUser = await UserApi.instance.me();
-            await SecureStorageUtils.setUserId(kakaoUser.id.toString());
-            state = AuthState.authenticated(kakaoUser);
-          } catch (userError) {
-            debugPrint('카카오 사용자 정보 가져오기 실패: $userError');
-            // 카카오 사용자 정보 없이도 인증 상태로 설정
-            state = AuthState.authenticated(null);
-          }
-
           // 로그인 성공 시 홈 화면으로 항상 이동
           if (context.mounted) {
             // 기존 홈으로 가는 리스너 대신 즉시 홈으로 이동

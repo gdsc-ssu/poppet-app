@@ -66,6 +66,65 @@ class EmailRepository {
       return false;
     }
   }
+
+  /// 사용자 이메일 가져오기
+  Future<String?> getUserEmail(String name) async {
+    try {
+      final response = await _apiService.getUserEmail(name: name);
+      debugPrint('사용자 이메일 응답: $response)');
+
+      // API 응답 형식: {"is_success": true, "code": 200, "message": "...", "data": {"email": "user@example.com"}}
+
+      // 성공 여부 확인
+      final isSuccess = response['is_success'] ?? false;
+      if (!isSuccess) {
+        debugPrint('API 응답이 성공이 아님: ${response['message']}');
+        return null;
+      }
+
+      // data 객체 확인
+      if (response.containsKey('data') &&
+          response['data'] is Map<String, dynamic>) {
+        final data = response['data'] as Map<String, dynamic>;
+
+        // email 값 확인
+        if (data.containsKey('email')) {
+          final email = data['email'];
+          if (email is String) {
+            return email;
+          }
+        }
+      }
+
+      return response;
+    } catch (e) {
+      debugPrint('사용자 이메일 가져오기 실패: $e');
+      return null;
+    }
+  }
+
+  /// 새 이메일 추가하기
+  Future<bool> addEmail(String name, String newEmail) async {
+    try {
+      final response = await _apiService.addEmail(
+        name: name,
+        data: {'newEmail': newEmail},
+      );
+
+      debugPrint('이메일 추가 응답: $response');
+
+      // API 응답 성공 여부 확인
+      if (response is Map<String, dynamic> &&
+          response.containsKey('is_success')) {
+        return response['is_success'] == true;
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('이메일 추가 실패: $e');
+      return false;
+    }
+  }
 }
 
 @riverpod

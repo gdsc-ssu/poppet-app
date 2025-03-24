@@ -161,6 +161,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       setState(() {
                         _currentIndex = index;
                       });
+
+                      // 마지막 페이지에서 오른쪽으로 넘기면 로그인 화면으로 이동
+                      if (index == _items.length) {
+                        context.go('/login');
+                      }
                     },
                   ),
                 ),

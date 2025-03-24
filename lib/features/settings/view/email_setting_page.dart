@@ -6,6 +6,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_style.dart';
 import '../view_model/email_setting_view_model.dart';
 import '../view/email_frequency_page.dart';
+import '../../../core/provider/login_provider.dart';
+import '../../../core/api/email_repository.dart';
 
 class EmailSettingPage extends ConsumerStatefulWidget {
   const EmailSettingPage({Key? key}) : super(key: key);
@@ -18,9 +20,10 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
   final List<TextEditingController> _controllers = [TextEditingController()];
   static const int MAX_EMAIL_COUNT = 5;
   final Map<int, String> _errorMessages = {};
-  bool _isButtonEnabled = false; // 버튼 활성화 상태를 추적하는 변수 추가
+  bool _isButtonEnabled = false;
+  bool _initialized = false;
+  bool _isLoading = false;
 
-  // 이메일 유효성 검사 함수
   bool _isValidEmail(String email) {
     final emailRegex = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
@@ -28,13 +31,6 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
     return emailRegex.hasMatch(email);
   }
 
-  // 중복 이메일 확인 함수
-  bool _hasDuplicateEmails(List<String> emails) {
-    final uniqueEmails = emails.toSet();
-    return uniqueEmails.length != emails.length;
-  }
-
-  // 이메일 유효성 검사 및 에러 메시지 업데이트
   void _validateEmail(int index) {
     final email = _controllers[index].text;
     setState(() {
@@ -43,7 +39,6 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
       } else if (!_isValidEmail(email)) {
         _errorMessages[index] = '이메일 형식이 올바르지 않습니다.';
       } else {
-        // 중복 이메일 확인
         bool isDuplicate = false;
         for (int i = 0; i < _controllers.length; i++) {
           if (i != index && _controllers[i].text == email) {
@@ -59,35 +54,105 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
         }
       }
 
-      // 버튼 활성화 상태 업데이트
       _updateButtonState();
     });
   }
 
-  // 버튼 활성화 상태 업데이트 함수
   void _updateButtonState() {
     bool hasValidEmail = false;
-
-    // 하나 이상의 유효한 이메일이 있는지 확인
     for (var controller in _controllers) {
       if (controller.text.isNotEmpty && _isValidEmail(controller.text)) {
         hasValidEmail = true;
         break;
       }
     }
+    setState(() {
+      _isButtonEnabled = _errorMessages.isEmpty && hasValidEmail;
+    });
+  }
 
-    // 에러가 없고 하나 이상의 유효한 이메일이 있으면 버튼 활성화
-    _isButtonEnabled = _errorMessages.isEmpty && hasValidEmail;
+  Future<void> _fetchEmails() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final loginInfo = ref.read(loginInfoProvider);
+      if (loginInfo == null) {
+        throw Exception('로그인 정보가 없습니다.');
+      }
+
+      final emailRepository = ref.read(emailRepositoryProvider);
+      final dynamic response = await emailRepository.getUserEmail(
+        loginInfo.name,
+      );
+
+      debugPrint('이메일 응답 데이터: $response');
+
+      setState(() {
+        _controllers.clear(); // 기존 컨트롤러 제거
+
+        if (response is Map && response.containsKey('data')) {
+          final dynamic data = response['data'];
+          if (data is List) {
+            // 이메일 목록 추가
+            for (final item in data) {
+              if (item is Map && item.containsKey('emailAddress')) {
+                final emailAddress = item['emailAddress'].toString();
+                if (emailAddress.isNotEmpty) {
+                  debugPrint('추가되는 이메일: $emailAddress');
+                  final controller = TextEditingController(text: emailAddress);
+                  controller.addListener(_updateButtonState);
+                  _controllers.add(controller);
+                }
+              }
+            }
+          }
+        }
+
+        // 컨트롤러가 비어있거나 최대 개수에 도달하지 않았다면 빈 필드 추가
+        if (_controllers.isEmpty || _controllers.length < MAX_EMAIL_COUNT) {
+          final controller = TextEditingController();
+          controller.addListener(_updateButtonState);
+          _controllers.add(controller);
+        }
+      });
+
+      _updateButtonState();
+    } catch (e) {
+      debugPrint('이메일 가져오기 실패: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이메일을 가져오는데 실패했습니다.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+
+      setState(() {
+        _controllers.clear();
+        _controllers.add(
+          TextEditingController()..addListener(_updateButtonState),
+        );
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    // 컨트롤러에 리스너 추가
-    for (var controller in _controllers) {
-      controller.addListener(() {
-        _updateButtonState();
-      });
+    _controllers.first.addListener(_updateButtonState);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _fetchEmails();
+      _initialized = true;
     }
   }
 
@@ -99,16 +164,55 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
     super.dispose();
   }
 
-  void _addEmailField() {
+  Future<void> _addEmailField() async {
     if (_controllers.length < MAX_EMAIL_COUNT) {
+      final controller = TextEditingController();
       setState(() {
-        final controller = TextEditingController();
-        controller.addListener(() {
-          _updateButtonState();
-        });
         _controllers.add(controller);
-        _updateButtonState();
       });
+
+      try {
+        final loginInfo = ref.read(loginInfoProvider);
+        if (loginInfo == null) {
+          throw Exception('로그인 정보가 없습니다.');
+        }
+
+        final emailRepository = ref.read(emailRepositoryProvider);
+        final success = await emailRepository.addEmail(
+          loginInfo.name,
+          _controllers[_controllers.length - 2].text,
+        );
+
+        if (success) {
+          controller.addListener(_updateButtonState);
+          _updateButtonState();
+        } else {
+          setState(() {
+            _controllers.removeLast();
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('이메일 추가에 실패했습니다.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('이메일 추가 중 오류 발생: $e');
+        setState(() {
+          _controllers.removeLast();
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('이메일 추가 중 오류가 발생했습니다.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -117,9 +221,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
       setState(() {
         _controllers[index].dispose();
         _controllers.removeAt(index);
-        // 에러 메시지도 함께 제거
         _errorMessages.remove(index);
-        // 인덱스 재조정
         final newErrorMessages = <int, String>{};
         _errorMessages.forEach((key, value) {
           if (key > index) {
@@ -130,8 +232,6 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
         });
         _errorMessages.clear();
         _errorMessages.addAll(newErrorMessages);
-
-        // 필드 제거 후 버튼 상태 업데이트
         _updateButtonState();
       });
     }
@@ -139,19 +239,15 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final emails = ref.watch(emailSettingProvider);
-    final emailNotifier = ref.read(emailSettingProvider.notifier);
-
     return Scaffold(
-      backgroundColor: Color(0xFFFFF9F2), // 배경색 설정
+      backgroundColor: const Color(0xFFFFF9F2),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => context.pop(),
         ),
-
         centerTitle: true,
       ),
       body: Padding(
@@ -167,7 +263,6 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
               style: AppTextStyle.pretendard_18_regular,
             ),
             SizedBox(height: 32.h),
-
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -186,8 +281,13 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                                     keyboardType: TextInputType.emailAddress,
                                     onChanged: (_) => _validateEmail(i),
                                     decoration: InputDecoration(
-                                      hintText: '이메일을 입력해주세요',
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      hintText:
+                                          _controllers[i].text.isEmpty
+                                              ? '이메일을 입력해주세요'
+                                              : null,
+                                      hintStyle: const TextStyle(
+                                        color: Colors.grey,
+                                      ),
                                       contentPadding: EdgeInsets.symmetric(
                                         horizontal: 16.w,
                                         vertical: 15.h,
@@ -202,7 +302,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                                           color:
                                               _errorMessages.containsKey(i)
                                                   ? Colors.red
-                                                  : Color(0xFFFB6B00),
+                                                  : const Color(0xFFFB6B00),
                                           width: 1.5.w,
                                         ),
                                       ),
@@ -214,7 +314,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                                           color:
                                               _errorMessages.containsKey(i)
                                                   ? Colors.red
-                                                  : Color(0xFFFB6B00),
+                                                  : const Color(0xFFFB6B00),
                                           width: 1.5.w,
                                         ),
                                       ),
@@ -236,39 +336,34 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                                     ),
                                 ],
                               ),
-
                               if (i > 0)
                                 Positioned(
                                   top: -8.h,
                                   right: -8.w,
                                   child: GestureDetector(
-                                    onTap: () {
-                                      _removeEmailField(i);
-                                    },
+                                    onTap: () => _removeEmailField(i),
                                     behavior: HitTestBehavior.opaque,
                                     child: Container(
                                       width: 20.w,
                                       height: 20.h,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(
-                                                0.2,
-                                              ),
-                                              blurRadius: 3,
-                                              spreadRadius: 1,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.2,
                                             ),
-                                          ],
-                                        ),
-                                        child: Center(
-                                          child: Icon(
-                                            Icons.close,
-                                            size: 16.sp,
-                                            color: Colors.grey,
+                                            blurRadius: 3,
+                                            spreadRadius: 1,
                                           ),
+                                        ],
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.close,
+                                          size: 16,
+                                          color: Colors.grey,
                                         ),
                                       ),
                                     ),
@@ -279,8 +374,6 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                           SizedBox(height: 26.h),
                         ],
                       ),
-
-                    // 이메일 추가 버튼
                     if (_controllers.length < MAX_EMAIL_COUNT)
                       GestureDetector(
                         onTap: _addEmailField,
@@ -289,7 +382,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                           margin: EdgeInsets.only(bottom: 16.h),
                           padding: EdgeInsets.symmetric(vertical: 16.h),
                           decoration: BoxDecoration(
-                            color: Color(0xFFFBB279),
+                            color: const Color(0xFFFBB279),
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           child: Center(
@@ -305,13 +398,10 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                 ),
               ),
             ),
-
-            // 다음 버튼
             GestureDetector(
               onTap:
                   _isButtonEnabled
                       ? () {
-                        // 이메일 저장 및 다음 화면으로 이동
                         List<String> validEmails = [];
                         for (var controller in _controllers) {
                           if (controller.text.isNotEmpty &&
@@ -321,8 +411,6 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                         }
 
                         if (validEmails.isNotEmpty) {
-                          emailNotifier.saveEmails(validEmails);
-                          // 이메일 발송 주기 페이지로 이동
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -338,7 +426,8 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                 margin: EdgeInsets.only(bottom: 88.h),
                 padding: EdgeInsets.symmetric(vertical: 16.h),
                 decoration: BoxDecoration(
-                  color: _isButtonEnabled ? Color(0xFFFF6B00) : Colors.grey,
+                  color:
+                      _isButtonEnabled ? const Color(0xFFFF6B00) : Colors.grey,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Center(

@@ -93,90 +93,16 @@ class KakaoAuthService {
       try {
         // 백엔드 서버로 카카오 인가 코드 전송 (/auth/login/kakao?code=인가코드 형식)
         final response = await _apiService.loginWithKakao(authCode);
-
+        final name = response.data.name;
         // 백엔드 응답 구조 확인 (단순 로깅 목적)
         debugPrint('백엔드 응답: $response');
+        final userInfo = UserInfo(name: name);
 
-        // 백엔드에서 토큰을 발급했다면 저장
-        if (response.accessToken != null &&
-            response.accessToken.token.isNotEmpty) {
-          if (_storage != null) {
-            await _storage.saveToken(response.accessToken.token);
-          }
-          // 추가 API 호출 없이 토큰만 설정
-          await DioClient.setToken(response.accessToken.token);
-
-          // 카카오에서 사용자 정보 가져와 Riverpod에 저장
-          try {
-            final kakaoUser = await UserApi.instance.me();
-            final userName = kakaoUser.kakaoAccount?.profile?.nickname ?? "사용자";
-
-            // Riverpod에 사용자 이름 저장
-            final userInfo = UserInfo(
-              id: kakaoUser.id.toString(),
-              name: userName,
-              email: kakaoUser.kakaoAccount?.email,
-              profileImage: kakaoUser.kakaoAccount?.profile?.profileImageUrl,
-            );
-
-            _ref.read(loginInfoProvider.notifier).setLoginInfo(userInfo);
-            debugPrint('사용자 이름 저장됨: $userName');
-          } catch (e) {
-            debugPrint('카카오 사용자 정보 가져오기 실패: $e');
-          }
-        } else {
-          // 응답은 성공했지만 토큰이 없는 경우 (로깅만 하고 성공으로 처리)
-          debugPrint('백엔드 응답에 토큰이 없습니다');
-
-          // 토큰이 없어도 카카오에서 사용자 정보 가져와 Riverpod에 저장
-          try {
-            final kakaoUser = await UserApi.instance.me();
-            final userName = kakaoUser.kakaoAccount?.profile?.nickname ?? "사용자";
-
-            // Riverpod에 사용자 이름 저장
-            final userInfo = UserInfo(
-              id: kakaoUser.id.toString(),
-              name: userName,
-              email: kakaoUser.kakaoAccount?.email,
-              profileImage: kakaoUser.kakaoAccount?.profile?.profileImageUrl,
-            );
-
-            _ref.read(loginInfoProvider.notifier).setLoginInfo(userInfo);
-            debugPrint('사용자 이름 저장됨: $userName');
-          } catch (e) {
-            debugPrint('카카오 사용자 정보 가져오기 실패: $e');
-          }
-        }
-
+        // ✅ Provider 등에 저장하고 싶다면 (예시)
+        _ref.read(loginInfoProvider.notifier).state = userInfo;
         return true;
       } catch (apiError) {
         debugPrint('API 호출 중 오류: $apiError');
-
-        // 200 OK이지만 응답 형식이 다른 경우에도 성공으로 처리
-        if (apiError is DioException && apiError.response?.statusCode == 200) {
-          debugPrint('응답 코드가 200이지만 형식이 다릅니다. 로그인 성공으로 처리합니다.');
-
-          // 200 응답이면 카카오에서 사용자 정보 가져와 Riverpod에 저장
-          try {
-            final kakaoUser = await UserApi.instance.me();
-            final userName = kakaoUser.kakaoAccount?.profile?.nickname ?? "사용자";
-
-            // Riverpod에 사용자 이름 저장
-            final userInfo = UserInfo(
-              id: kakaoUser.id.toString(),
-              name: userName,
-              email: kakaoUser.kakaoAccount?.email,
-              profileImage: kakaoUser.kakaoAccount?.profile?.profileImageUrl,
-            );
-
-            _ref.read(loginInfoProvider.notifier).setLoginInfo(userInfo);
-            debugPrint('사용자 이름 저장됨: $userName');
-          } catch (e) {
-            debugPrint('카카오 사용자 정보 가져오기 실패: $e');
-          }
-
-          return true;
-        }
 
         rethrow;
       }
@@ -188,25 +114,6 @@ class KakaoAuthService {
         'type \'Null\' is not a subtype of type \'Map<String, dynamic>\'',
       )) {
         debugPrint('JSON 형식 오류지만 로그인 성공으로 처리');
-
-        // JSON 형식 오류여도 카카오에서 사용자 정보 가져와 Riverpod에 저장
-        try {
-          final kakaoUser = await UserApi.instance.me();
-          final userName = kakaoUser.kakaoAccount?.profile?.nickname ?? "사용자";
-
-          // Riverpod에 사용자 이름 저장
-          final userInfo = UserInfo(
-            id: kakaoUser.id.toString(),
-            name: userName,
-            email: kakaoUser.kakaoAccount?.email,
-            profileImage: kakaoUser.kakaoAccount?.profile?.profileImageUrl,
-          );
-
-          _ref.read(loginInfoProvider.notifier).setLoginInfo(userInfo);
-          debugPrint('사용자 이름 저장됨: $userName');
-        } catch (userError) {
-          debugPrint('카카오 사용자 정보 가져오기 실패: $userError');
-        }
 
         return true;
       }

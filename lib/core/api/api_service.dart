@@ -12,9 +12,6 @@ part 'api_service.g.dart';
 abstract class ApiService {
   factory ApiService(Dio dio) = _ApiService;
 
-  @POST('/auth/kakao')
-  Future<AuthResponse> oAuthKakao(@Body() Map<String, dynamic> data);
-
   @GET('/auth/login/kakao')
   Future<AuthResponse> loginWithKakao(@Query('code') String code);
 
@@ -25,18 +22,18 @@ abstract class ApiService {
   @MultiPart()
   Future<ChatResponse> createChat({
     @Part(name: 'chat') required List<MultipartFile> chat,
-    @Query('name') String? name = '김준하',
+    @Query('name') String? name,
   });
 
   @PATCH('/chats/{chatId}')
   Future<ChatResponse> updateChat(
-    @Path() String chatId,
+    @Path('chatId') String chatId,
     @Body() Map<String, dynamic> data,
   );
 
   @POST('/chats/{chatId}/name')
   Future<ChatResponse> setChatName({
-    @Path() required String chatId,
+    @Path('chatId') required String chatId,
     @Body() required Map<String, dynamic> data,
   });
 
@@ -48,6 +45,15 @@ abstract class ApiService {
     @Query('name') required String name,
     @Query('period') required int period,
   });
+
+  @GET('/emails')
+  Future<dynamic> getUserEmail({@Query('name') required String name});
+
+  @POST('/emails')
+  Future<dynamic> addEmail({
+    @Query('name') required String name,
+    @Body() required Map<String, dynamic> data,
+  });
 }
 
 @riverpod
@@ -57,12 +63,45 @@ ApiService apiService(ApiServiceRef ref) {
 }
 
 class AuthResponse {
-  final AccessToken accessToken;
+  final bool isSuccess;
+  final int code;
+  final String message;
+  final Data data;
 
-  AuthResponse({required this.accessToken});
+  AuthResponse({
+    required this.isSuccess,
+    required this.code,
+    required this.message,
+    required this.data,
+  });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
-    return AuthResponse(accessToken: AccessToken.fromJson(json['accessToken']));
+    return AuthResponse(
+      isSuccess: json['is_success'],
+      code: json['code'],
+      message: json['message'],
+      data: Data.fromJson(json['data']),
+    );
+  }
+
+  @override
+  String toString() {
+    return 'AuthResponse(isSuccess: $isSuccess, code: $code, message: $message, data: $data)';
+  }
+}
+
+class Data {
+  final String name;
+
+  Data({required this.name});
+
+  factory Data.fromJson(Map<String, dynamic> json) {
+    return Data(name: json['name']);
+  }
+
+  @override
+  String toString() {
+    return 'Data(name: $name)';
   }
 }
 
@@ -77,24 +116,11 @@ class AccessToken {
 }
 
 class UserInfo {
-  final String id;
   final String name;
-  final String? email;
-  final String? profileImage;
 
-  UserInfo({
-    required this.id,
-    required this.name,
-    this.email,
-    this.profileImage,
-  });
+  UserInfo({required this.name});
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
-    return UserInfo(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      profileImage: json['profileImage'],
-    );
+    return UserInfo(name: json['name']);
   }
 }
