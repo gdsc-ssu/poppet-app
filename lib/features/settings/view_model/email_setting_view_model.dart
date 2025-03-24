@@ -105,7 +105,7 @@ class EmailSettingViewModel extends _$EmailSettingViewModel {
 
         if (email != null) {
           debugPrint('사용자 이메일: $email');
-          _userEmail = email;
+
           state = AsyncValue.data(null); // 상태 업데이트
         } else {
           debugPrint('사용자 이메일을 가져오지 못했습니다.');

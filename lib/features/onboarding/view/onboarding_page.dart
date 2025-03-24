@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:carousel_slider/carousel_controller.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -14,9 +15,8 @@ class OnboardingPage extends StatefulWidget {
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
-  final CarouselSliderController _carouselController =
-      CarouselSliderController();
   int _currentIndex = 0;
+  final CarouselController _carouselController = CarouselController();
 
   final List<OnboardingItem> _items = [
     OnboardingItem(image: 'assets/images/basicpopet.png'),
@@ -42,7 +42,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
             Column(
               children: [
                 SizedBox(height: 40.h),
-                // Page Indicator
                 AnimatedSmoothIndicator(
                   activeIndex: _currentIndex,
                   count: _items.length,
@@ -55,135 +54,142 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   ),
                 ),
 
-                // Carousel
-                CarouselSlider.builder(
-                  carouselController: _carouselController,
-                  itemCount: _items.length,
-                  itemBuilder: (context, index, realIndex) {
-                    final item = _items[index];
-                    return Column(
-                      mainAxisAlignment:
-                          item.title == null && item.subtitle == null
-                              ? MainAxisAlignment.center
-                              : MainAxisAlignment.start,
-                      children: [
-                        if (item.title == null)
-                          Container(
-                            margin: EdgeInsets.only(left: 26.sp),
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: CustomPaint(
-                                painter: SpeechBubblePainter(isTopBubble: true),
-                                child: Container(
-                                  padding: EdgeInsets.only(top: 21.sp),
-                                  width: 220.sp,
-                                  height: 108.sp,
-                                  child: Center(
-                                    child: Text(
-                                      '할모니~\n안녕하세요!',
-                                      style: AppTextStyle.siwoo_32_regular
-                                          .copyWith(color: Colors.black),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                /// ✅ 변경된 부분 시작: NotificationListener 추가
+                Expanded(
+                  child: NotificationListener<ScrollEndNotification>(
+                    onNotification: (notification) {
+                      final metrics = notification.metrics;
 
-                        if (item.title != null)
-                          Container(
-                            margin: EdgeInsets.only(top: 40.h),
-                            child: Text(
-                              item.title!,
-                              style: AppTextStyle.siwoo_32_regular,
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        if (item.title == 'POPPET에서\n오늘 하루 있었던 일을')
-                          Container(margin: EdgeInsets.only(top: 10.h)),
-                        Image.asset(item.image, width: 366.sp, height: 366.sp),
+                      final isLastPage = _currentIndex == _items.length - 1;
+                      final isAtEdge =
+                          metrics.pixels == metrics.maxScrollExtent;
 
-                        if (item.title == null)
-                          Container(
-                            margin: EdgeInsets.only(left: 47.sp),
-                            child: CustomPaint(
-                              painter: SpeechBubblePainter(isTopBubble: false),
-                              child: Container(
-                                width: 300.sp,
-                                height: 98.sp,
-                                padding: EdgeInsets.only(
-                                  left: 30.sp,
-                                  right: 30.sp,
-                                ),
-                                child: Center(
-                                  child: RichText(
-                                    textAlign: TextAlign.center,
-                                    text: TextSpan(
-                                      style: AppTextStyle.siwoo_36_regular
-                                          .copyWith(color: Colors.black),
-                                      children: [
-                                        TextSpan(text: '저는 '),
-                                        TextSpan(
-                                          text: '뽀삐',
-                                          style: AppTextStyle.siwoo_36_regular
-                                              .copyWith(
-                                                color: const Color(0xFFFF5722),
-                                              ),
-                                        ),
-                                        TextSpan(text: '라고 해요.'),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        if (item.subtitle == '바쁘까, 방해가 될까\n걱정되셨죠?')
-                          Container(margin: EdgeInsets.only(top: 10.h)),
-                        if (item.subtitle != null)
-                          Text(
-                            item.subtitle!,
-                            style: AppTextStyle.siwoo_32_regular.copyWith(
-                              color: AppColors.darkGrey,
-                              height: 1.6,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                      ],
-                    );
-                  },
-                  options: CarouselOptions(
-                    height: 650.sp,
-                    viewportFraction: 1,
-                    enableInfiniteScroll: false,
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        _currentIndex = index;
-                      });
-
-                      // 마지막 페이지에서 오른쪽으로 넘기면 로그인 화면으로 이동
-                      if (index == _items.length) {
-                        context.go('/login');
+                      if (isLastPage && isAtEdge) {
+                        Future.microtask(() {
+                          context.go('/login');
+                        });
                       }
+                      return false;
                     },
+                    child: CarouselSlider.builder(
+                      carouselController: CarouselSliderController(),
+                      itemCount: _items.length,
+                      itemBuilder: (context, index, realIndex) {
+                        final item = _items[index];
+                        return Column(
+                          mainAxisAlignment:
+                              item.title == null && item.subtitle == null
+                                  ? MainAxisAlignment.center
+                                  : MainAxisAlignment.start,
+                          children: [
+                            if (item.title == null)
+                              Container(
+                                margin: EdgeInsets.only(left: 26.sp),
+                                child: Align(
+                                  alignment: Alignment.topLeft,
+                                  child: CustomPaint(
+                                    painter: SpeechBubblePainter(
+                                      isTopBubble: true,
+                                    ),
+                                    child: Container(
+                                      padding: EdgeInsets.only(top: 21.sp),
+                                      width: 220.sp,
+                                      height: 108.sp,
+                                      child: Center(
+                                        child: Text(
+                                          '할모니~\n안녕하세요!',
+                                          style: AppTextStyle.siwoo_32_regular
+                                              .copyWith(color: Colors.black),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            if (item.title != null)
+                              Container(
+                                margin: EdgeInsets.only(top: 40.h),
+                                child: Text(
+                                  item.title!,
+                                  style: AppTextStyle.siwoo_32_regular,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            if (item.title == 'POPPET에서\n오늘 하루 있었던 일을')
+                              Container(margin: EdgeInsets.only(top: 10.h)),
+                            Image.asset(
+                              item.image,
+                              width: 366.sp,
+                              height: 366.sp,
+                            ),
+                            if (item.title == null)
+                              Container(
+                                margin: EdgeInsets.only(left: 47.sp),
+                                child: CustomPaint(
+                                  painter: SpeechBubblePainter(
+                                    isTopBubble: false,
+                                  ),
+                                  child: Container(
+                                    width: 300.sp,
+                                    height: 98.sp,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 30.sp,
+                                    ),
+                                    child: Center(
+                                      child: RichText(
+                                        textAlign: TextAlign.center,
+                                        text: TextSpan(
+                                          style: AppTextStyle.siwoo_36_regular
+                                              .copyWith(color: Colors.black),
+                                          children: [
+                                            const TextSpan(text: '저는 '),
+                                            TextSpan(
+                                              text: '뽀삐',
+                                              style: AppTextStyle
+                                                  .siwoo_36_regular
+                                                  .copyWith(
+                                                    color: const Color(
+                                                      0xFFFF5722,
+                                                    ),
+                                                  ),
+                                            ),
+                                            const TextSpan(text: '라고 해요.'),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            if (item.subtitle == '바쁘까, 방해가 될까\n걱정되셨죠?')
+                              Container(margin: EdgeInsets.only(top: 10.h)),
+                            if (item.subtitle != null)
+                              Text(
+                                item.subtitle!,
+                                style: AppTextStyle.siwoo_32_regular.copyWith(
+                                  color: AppColors.darkGrey,
+                                  height: 1.6,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                          ],
+                        );
+                      },
+                      options: CarouselOptions(
+                        height: 650.sp,
+                        viewportFraction: 1,
+                        enableInfiniteScroll: false,
+                        onPageChanged: (index, reason) {
+                          setState(() {
+                            _currentIndex = index;
+                          });
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ],
-            ),
-            // Skip button
-            Positioned(
-              top: 0,
-              right: 0,
-              child: TextButton(
-                onPressed: () => context.go('/login'),
-                child: Text(
-                  '건너뛰기',
-                  style: AppTextStyle.pretendard_16_regular.copyWith(
-                    color: AppColors.darkGrey,
-                  ),
-                ),
-              ),
             ),
           ],
         ),
@@ -208,7 +214,6 @@ class OnboardingItem {
   });
 }
 
-// 🎨 Custom Speech Bubble Painter
 class SpeechBubblePainter extends CustomPainter {
   final bool isTopBubble;
 
@@ -216,7 +221,6 @@ class SpeechBubblePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Shadow paint
     final shadowPaint =
         Paint()
           ..color = Colors.black.withOpacity(0.08)
@@ -230,36 +234,28 @@ class SpeechBubblePainter extends CustomPainter {
     final path = Path();
 
     if (isTopBubble) {
-      // Top bubble - oval shape
       final rect = RRect.fromRectAndRadius(
         Rect.fromLTWH(0, 0, size.width, size.height * 1.2),
         Radius.elliptical(size.width / 2, size.height / 1.5),
       );
       path.addRRect(rect);
-
-      // Add triangular tail to bottom-right
       path.moveTo(size.width * 0.65, size.height * 1.1);
       path.lineTo(size.width * 0.9, size.height * 0.2);
       path.lineTo(size.width * 0.75, size.height * 1.35);
       path.close();
     } else {
-      // Bottom bubble - oval shape
       final rect = RRect.fromRectAndRadius(
         Rect.fromLTWH(0, -size.height * 0.01, size.width, size.height * 0.9),
         Radius.elliptical(size.width / 2, size.height / 2),
       );
       path.addRRect(rect);
-
-      // Add triangular tail to top-right
       path.moveTo(size.width * 0.17, size.height * 0.7);
       path.lineTo(size.width * 0.4, -size.height * 0.27);
       path.lineTo(size.width * 0.45, size.height * 0.7);
       path.close();
     }
 
-    // Draw shadow first
     canvas.drawPath(path, shadowPaint);
-    // Then draw the bubble
     canvas.drawPath(path, paint);
   }
 

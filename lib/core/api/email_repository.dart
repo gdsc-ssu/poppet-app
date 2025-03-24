@@ -68,7 +68,7 @@ class EmailRepository {
   }
 
   /// 사용자 이메일 가져오기
-  Future<String?> getUserEmail(String name) async {
+  Future<List<EmailData>?> getUserEmail(String name) async {
     try {
       final response = await _apiService.getUserEmail(name: name);
       debugPrint('사용자 이메일 응답: $response)');
@@ -76,27 +76,11 @@ class EmailRepository {
       // API 응답 형식: {"is_success": true, "code": 200, "message": "...", "data": {"email": "user@example.com"}}
 
       // 성공 여부 확인
-      final isSuccess = response['is_success'] ?? false;
-      if (!isSuccess) {
-        debugPrint('API 응답이 성공이 아님: ${response['message']}');
-        return null;
+      if (response.isSuccess) {
+        return response.data;
       }
 
-      // data 객체 확인
-      if (response.containsKey('data') &&
-          response['data'] is Map<String, dynamic>) {
-        final data = response['data'] as Map<String, dynamic>;
-
-        // email 값 확인
-        if (data.containsKey('email')) {
-          final email = data['email'];
-          if (email is String) {
-            return email;
-          }
-        }
-      }
-
-      return response;
+      return null;
     } catch (e) {
       debugPrint('사용자 이메일 가져오기 실패: $e');
       return null;
@@ -132,4 +116,49 @@ EmailRepository emailRepository(EmailRepositoryRef ref) {
   final apiService = ref.watch(apiServiceProvider);
   final appStorage = ref.watch(appStorageProvider).value!;
   return EmailRepository(apiService, appStorage);
+}
+
+class EmailData {
+  final int emailId;
+  final String emailAddress;
+
+  EmailData({required this.emailId, required this.emailAddress});
+
+  factory EmailData.fromJson(Map<String, dynamic> json) {
+    return EmailData(
+      emailId: json['emailId'],
+      emailAddress: json['emailAddress'],
+    );
+  }
+  @override
+  String toString() =>
+      'EmailData(emailId: $emailId, emailAddress: $emailAddress)';
+}
+
+class EmailResponse {
+  final bool isSuccess;
+  final int code;
+  final String message;
+  final List<EmailData> data;
+
+  EmailResponse({
+    required this.isSuccess,
+    required this.code,
+    required this.message,
+    required this.data,
+  });
+
+  factory EmailResponse.fromJson(Map<String, dynamic> json) {
+    return EmailResponse(
+      isSuccess: json['is_success'],
+      code: json['code'],
+      message: json['message'],
+      data: List<EmailData>.from(
+        (json['data'] as List).map((e) => EmailData.fromJson(e)),
+      ),
+    );
+  }
+  @override
+  String toString() =>
+      'EmailResponse(isSuccess: $isSuccess, code: $code, message: $message, data: $data)';
 }

@@ -60,14 +60,22 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
 
   void _updateButtonState() {
     bool hasValidEmail = false;
-    for (var controller in _controllers) {
-      if (controller.text.isNotEmpty && _isValidEmail(controller.text)) {
-        hasValidEmail = true;
-        break;
+    bool hasErrorEmail = false;
+
+    for (int i = 0; i < _controllers.length; i++) {
+      final email = _controllers[i].text;
+      if (email.isNotEmpty) {
+        if (_isValidEmail(email) && !_errorMessages.containsKey(i)) {
+          hasValidEmail = true;
+        }
+        if (_errorMessages.containsKey(i)) {
+          hasErrorEmail = true;
+        }
       }
     }
+
     setState(() {
-      _isButtonEnabled = _errorMessages.isEmpty && hasValidEmail;
+      _isButtonEnabled = hasValidEmail && !hasErrorEmail;
     });
   }
 
@@ -83,29 +91,32 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
       }
 
       final emailRepository = ref.read(emailRepositoryProvider);
-      final dynamic response = await emailRepository.getUserEmail(
-        loginInfo.name,
-      );
+      final emailList = await emailRepository.getUserEmail(loginInfo.name);
 
-      debugPrint('이메일 응답 데이터: $response');
+      debugPrint('이메일 응답 데이터: $emailList');
 
       setState(() {
         _controllers.clear(); // 기존 컨트롤러 제거
+        _errorMessages.clear(); // 오류 메시지 초기화
 
-        if (response is Map && response.containsKey('data')) {
-          final dynamic data = response['data'];
-          if (data is List) {
-            // 이메일 목록 추가
-            for (final item in data) {
-              if (item is Map && item.containsKey('emailAddress')) {
-                final emailAddress = item['emailAddress'].toString();
-                if (emailAddress.isNotEmpty) {
-                  debugPrint('추가되는 이메일: $emailAddress');
-                  final controller = TextEditingController(text: emailAddress);
-                  controller.addListener(_updateButtonState);
-                  _controllers.add(controller);
-                }
-              }
+        if (emailList != null && emailList.isNotEmpty) {
+          // 이메일 목록 추가
+          for (final emailData in emailList) {
+            final emailAddress = emailData.emailAddress;
+            if (emailAddress.isNotEmpty) {
+              debugPrint('추가되는 이메일: $emailAddress');
+              final controller = TextEditingController(text: emailAddress);
+              _controllers.add(controller);
+
+              // 리스너 추가
+              final index = _controllers.length - 1;
+              controller.addListener(() {
+                _validateEmail(index);
+                _updateButtonState();
+              });
+
+              // 이메일 유효성 검사
+              _validateEmail(index);
             }
           }
         }
@@ -113,8 +124,13 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
         // 컨트롤러가 비어있거나 최대 개수에 도달하지 않았다면 빈 필드 추가
         if (_controllers.isEmpty || _controllers.length < MAX_EMAIL_COUNT) {
           final controller = TextEditingController();
-          controller.addListener(_updateButtonState);
           _controllers.add(controller);
+
+          final index = _controllers.length - 1;
+          controller.addListener(() {
+            _validateEmail(index);
+            _updateButtonState();
+          });
         }
       });
 
@@ -130,9 +146,13 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
 
       setState(() {
         _controllers.clear();
-        _controllers.add(
-          TextEditingController()..addListener(_updateButtonState),
-        );
+        _errorMessages.clear();
+        final controller = TextEditingController();
+        _controllers.add(controller);
+        controller.addListener(() {
+          _validateEmail(0);
+          _updateButtonState();
+        });
       });
     } finally {
       setState(() {
@@ -144,7 +164,10 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
   @override
   void initState() {
     super.initState();
-    _controllers.first.addListener(_updateButtonState);
+    _controllers.first.addListener(() {
+      _validateEmail(0);
+      _updateButtonState();
+    });
   }
 
   @override
@@ -166,6 +189,21 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
 
   Future<void> _addEmailField() async {
     if (_controllers.length < MAX_EMAIL_COUNT) {
+      final previousIndex = _controllers.length - 1;
+      final previousEmail = _controllers[previousIndex].text;
+
+      // 이전 이메일이 비어있거나 유효하지 않은 경우
+      if (previousEmail.isEmpty || !_isValidEmail(previousEmail)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('먼저 유효한 이메일을 입력해주세요.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // 이메일 추가 API 호출 전에 컨트롤러 추가
       final controller = TextEditingController();
       setState(() {
         _controllers.add(controller);
@@ -180,11 +218,15 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
         final emailRepository = ref.read(emailRepositoryProvider);
         final success = await emailRepository.addEmail(
           loginInfo.name,
-          _controllers[_controllers.length - 2].text,
+          previousEmail,
         );
 
         if (success) {
-          controller.addListener(_updateButtonState);
+          // 성공 시 리스너 추가
+          controller.addListener(() {
+            _validateEmail(_controllers.indexOf(controller));
+            _updateButtonState();
+          });
           _updateButtonState();
         } else {
           setState(() {

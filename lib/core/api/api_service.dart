@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:pet/core/api/email_repository.dart';
 import 'package:retrofit/retrofit.dart';
 import 'package:pet/core/api/models/auth_response.dart';
 import 'package:pet/core/api/models/user_info.dart';
@@ -47,7 +48,7 @@ abstract class ApiService {
   });
 
   @GET('/emails')
-  Future<dynamic> getUserEmail({@Query('name') required String name});
+  Future<EmailResponse> getUserEmail({@Query('name') required String name});
 
   @POST('/emails')
   Future<dynamic> addEmail({
