@@ -31,6 +31,7 @@ class HomeViewModel extends _$HomeViewModel {
   final List<File> _recordingFiles = [];
   int _elapsedSeconds = 0;
   ChatResponse? _lastChatResponse;
+  bool _isSegmentRecording = false; // 세그먼트 녹음 중인지 여부
 
   ChatRepository get _chatRepository => ref.read(chatRepositoryProvider);
 
@@ -59,9 +60,10 @@ class HomeViewModel extends _$HomeViewModel {
 
   Future<void> toggleRecording() async {
     if (_recordingState == RecordingState.initial) {
+      _recordingFiles.clear(); // 녹음 시작 시 파일 목록 초기화
       await _startRecording();
     } else if (_recordingState == RecordingState.recording) {
-      await _stopRecording();
+      await _stopRecording(uploadImmediately: true); // 사용자가 중지 버튼을 누를 때만 업로드
     } else {
       // 녹음 완료 상태에서 다시 초기 상태로 돌아감
       _recordingState = RecordingState.initial;
@@ -96,6 +98,25 @@ class HomeViewModel extends _$HomeViewModel {
       return;
     }
 
+    await _startSegmentRecording();
+
+    _recordingState = RecordingState.recording;
+    _elapsedSeconds = 0;
+    state = const AsyncValue.data(null);
+
+    // 경과 시간 타이머 시작
+    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _elapsedSeconds++;
+      state = const AsyncValue.data(null);
+    });
+  }
+
+  // 세그먼트 녹음 시작 (59초 단위로 녹음 파일 분할)
+  Future<void> _startSegmentRecording() async {
+    if (_isSegmentRecording) return;
+
+    _isSegmentRecording = true;
+
     // 임시 디렉토리 가져오기
     final tempDir = await getTemporaryDirectory();
     final filePath = '${tempDir.path}/recording_$_fileCounter.flac';
@@ -110,49 +131,57 @@ class HomeViewModel extends _$HomeViewModel {
         path: filePath,
       );
 
-      _recordingState = RecordingState.recording;
-      _elapsedSeconds = 0;
-      state = const AsyncValue.data(null);
-
-      // 경과 시간 타이머 시작
-      _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        _elapsedSeconds++;
-        state = const AsyncValue.data(null);
-      });
-
-      // 58초 타이머 시작
-      _recordingTimer = Timer(const Duration(seconds: 58), () async {
-        await _stopRecording();
+      // 59초 후에 현재 세그먼트 중지하고 새 세그먼트 시작
+      _recordingTimer = Timer(const Duration(seconds: 59), () async {
+        await _stopRecording(uploadImmediately: false);
+        if (_recordingState == RecordingState.recording) {
+          await _startSegmentRecording(); // 새 세그먼트 시작
+        }
       });
     } catch (e) {
+      _isSegmentRecording = false;
       print('Recording error: $e');
       state = AsyncValue.error(e, StackTrace.current);
     }
   }
 
-  Future<void> _stopRecording() async {
+  Future<void> _stopRecording({required bool uploadImmediately}) async {
     _recordingTimer?.cancel();
-    _elapsedTimer?.cancel();
 
-    if (_recordingState == RecordingState.recording) {
+    if (_isSegmentRecording) {
       try {
         final filePath = await _audioRecorder.stop();
-        _recordingState = RecordingState.completed;
+        _isSegmentRecording = false;
         _fileCounter++;
-        _elapsedSeconds = 0;
-        state = const AsyncValue.data(null);
 
         if (filePath != null) {
           final recordedFile = File(filePath);
           _recordingFiles.add(recordedFile);
           print('Recording saved at: $filePath');
+        }
 
-          // 녹음 파일 업로드
+        if (uploadImmediately) {
+          // 모든 녹음 중지 및 업로드 진행
+          _elapsedTimer?.cancel();
+          _elapsedSeconds = 0;
+          _recordingState = RecordingState.completed;
+          state = const AsyncValue.data(null);
+
+          // 모든 녹음 파일 업로드
           await _uploadRecordings();
         }
       } catch (e) {
+        _isSegmentRecording = false;
         print('Stop recording error: $e');
       }
+    } else if (uploadImmediately) {
+      // 녹음 중이 아니더라도 중지 버튼을 눌렀다면 업로드 진행
+      _elapsedTimer?.cancel();
+      _elapsedSeconds = 0;
+      _recordingState = RecordingState.completed;
+      state = const AsyncValue.data(null);
+
+      await _uploadRecordings();
     }
   }
 
@@ -243,4 +272,6 @@ class HomeViewModel extends _$HomeViewModel {
     _lastChatResponse = null;
     state = const AsyncValue.data(null);
   }
+
+  int get recordingFilesCount => _recordingFiles.length;
 }

@@ -50,6 +50,12 @@ abstract class ApiService {
   @GET('/emails')
   Future<EmailResponse> getUserEmail({@Query('name') required String name});
 
+  @DELETE('/emails/{id}')
+  Future<CommonResponse> deleteUserEmail({
+    @Query('name') required String name,
+    @Path("id") required int id,
+  });
+
   @POST('/emails')
   Future<dynamic> addEmail({
     @Query('name') required String name,
@@ -123,5 +129,25 @@ class UserInfo {
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
     return UserInfo(name: json['name']);
+  }
+}
+
+class CommonResponse {
+  final bool isSuccess;
+  final int code;
+  final String message;
+
+  CommonResponse({
+    required this.isSuccess,
+    required this.code,
+    required this.message,
+  });
+
+  factory CommonResponse.fromJson(Map<String, dynamic> json) {
+    return CommonResponse(
+      isSuccess: json['is_success'] ?? false,
+      code: json['code'] ?? 0,
+      message: json['message'] ?? '',
+    );
   }
 }

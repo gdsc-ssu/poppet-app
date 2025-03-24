@@ -7,7 +7,7 @@ part of 'email_setting_view_model.dart';
 // **************************************************************************
 
 String _$emailSettingViewModelHash() =>
-    r'4f0e5e10ef5b73c26e3eab6863415b4bf8444890';
+    r'c367d79c4ac1fb56ded65680c148c834110cae4f';
 
 /// See also [EmailSettingViewModel].
 @ProviderFor(EmailSettingViewModel)

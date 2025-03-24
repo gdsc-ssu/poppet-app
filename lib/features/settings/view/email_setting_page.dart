@@ -18,6 +18,7 @@ class EmailSettingPage extends ConsumerStatefulWidget {
 
 class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
   final List<TextEditingController> _controllers = [TextEditingController()];
+  final List<int> _emailIds = [];
   static const int MAX_EMAIL_COUNT = 5;
   final Map<int, String> _errorMessages = {};
   bool _isButtonEnabled = false;
@@ -96,17 +97,20 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
       debugPrint('이메일 응답 데이터: $emailList');
 
       setState(() {
-        _controllers.clear(); // 기존 컨트롤러 제거
-        _errorMessages.clear(); // 오류 메시지 초기화
+        _controllers.clear();
+        _emailIds.clear();
+        _errorMessages.clear();
 
         if (emailList != null && emailList.isNotEmpty) {
           // 이메일 목록 추가
           for (final emailData in emailList) {
             final emailAddress = emailData.emailAddress;
+            final emailId = emailData.emailId;
             if (emailAddress.isNotEmpty) {
               debugPrint('추가되는 이메일: $emailAddress');
               final controller = TextEditingController(text: emailAddress);
               _controllers.add(controller);
+              _emailIds.add(emailId);
 
               // 리스너 추가
               final index = _controllers.length - 1;
@@ -125,6 +129,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
         if (_controllers.isEmpty || _controllers.length < MAX_EMAIL_COUNT) {
           final controller = TextEditingController();
           _controllers.add(controller);
+          _emailIds.add(-1);
 
           final index = _controllers.length - 1;
           controller.addListener(() {
@@ -146,9 +151,11 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
 
       setState(() {
         _controllers.clear();
+        _emailIds.clear();
         _errorMessages.clear();
         final controller = TextEditingController();
         _controllers.add(controller);
+        _emailIds.add(-1);
         controller.addListener(() {
           _validateEmail(0);
           _updateButtonState();
@@ -258,24 +265,40 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
     }
   }
 
-  void _removeEmailField(int index) {
-    if (_controllers.length > 1 && index > 0) {
-      setState(() {
-        _controllers[index].dispose();
-        _controllers.removeAt(index);
-        _errorMessages.remove(index);
-        final newErrorMessages = <int, String>{};
-        _errorMessages.forEach((key, value) {
-          if (key > index) {
-            newErrorMessages[key - 1] = value;
-          } else if (key < index) {
-            newErrorMessages[key] = value;
-          }
+  Future<void> _removeEmailField(int index) async {
+    try {
+      final loginInfo = ref.read(loginInfoProvider);
+
+      final emailId = _emailIds[index];
+      final response = await ref
+          .read(emailRepositoryProvider)
+          .deleteUserEmail(id: emailId, name: loginInfo?.name ?? '');
+
+      if (_controllers.length > 1 && index >= 0) {
+        setState(() {
+          _controllers[index].dispose();
+          _controllers.removeAt(index);
+          _emailIds.removeAt(index);
+          _errorMessages.remove(index);
+
+          final newErrorMessages = <int, String>{};
+          _errorMessages.forEach((key, value) {
+            if (key > index) {
+              newErrorMessages[key - 1] = value;
+            } else {
+              newErrorMessages[key] = value;
+            }
+          });
+
+          _errorMessages
+            ..clear()
+            ..addAll(newErrorMessages);
+
+          _updateButtonState();
         });
-        _errorMessages.clear();
-        _errorMessages.addAll(newErrorMessages);
-        _updateButtonState();
-      });
+      }
+    } catch (e) {
+      debugPrint('🔥 이메일 삭제 요청 실패: $e');
     }
   }
 
@@ -378,39 +401,37 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
                                     ),
                                 ],
                               ),
-                              if (i > 0)
-                                Positioned(
-                                  top: -8.h,
-                                  right: -8.w,
-                                  child: GestureDetector(
-                                    onTap: () => _removeEmailField(i),
-                                    behavior: HitTestBehavior.opaque,
-                                    child: Container(
-                                      width: 20.w,
-                                      height: 20.h,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              0.2,
-                                            ),
-                                            blurRadius: 3,
-                                            spreadRadius: 1,
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Center(
-                                        child: Icon(
-                                          Icons.close,
-                                          size: 16,
-                                          color: Colors.grey,
+
+                              Positioned(
+                                top: -8.h,
+                                right: -8.w,
+                                child: GestureDetector(
+                                  onTap: () => _removeEmailField(i),
+                                  behavior: HitTestBehavior.opaque,
+                                  child: Container(
+                                    width: 20.w,
+                                    height: 20.h,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.2),
+                                          blurRadius: 3,
+                                          spreadRadius: 1,
                                         ),
+                                      ],
+                                    ),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.close,
+                                        size: 16,
+                                        color: Colors.grey,
                                       ),
                                     ),
                                   ),
                                 ),
+                              ),
                             ],
                           ),
                           SizedBox(height: 26.h),

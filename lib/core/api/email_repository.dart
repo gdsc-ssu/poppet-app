@@ -109,6 +109,18 @@ class EmailRepository {
       return false;
     }
   }
+
+  Future<bool> deleteUserEmail({required int id, required String name}) async {
+    try {
+      final response = await _apiService.deleteUserEmail(id: id, name: name);
+      debugPrint('이메일 삭제 응답: $response');
+
+      return false;
+    } catch (e) {
+      debugPrint('이메일 삭제 실패: $e');
+      return false;
+    }
+  }
 }
 
 @riverpod
