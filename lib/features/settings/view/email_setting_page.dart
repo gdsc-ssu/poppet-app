@@ -306,6 +306,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF9F2),
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -315,198 +316,218 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 32.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 24.h),
-            Text('이메일 입력', style: AppTextStyle.pretendard_32_bold),
-            SizedBox(height: 4.h),
-            Text(
-              '보호자의 이메일을 입력해주세요.\n사용자의 대화 내역을 전달받을 수 있습니다.',
-              style: AppTextStyle.pretendard_18_regular,
-            ),
-            SizedBox(height: 32.h),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    for (int i = 0; i < _controllers.length; i++)
-                      Column(
-                        children: [
-                          Stack(
-                            clipBehavior: Clip.none,
+      body: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 24.h),
+                Text('이메일 입력', style: AppTextStyle.pretendard_32_bold),
+                SizedBox(height: 4.h),
+                Text(
+                  '보호자의 이메일을 입력해주세요.\n사용자의 대화 내역을 전달받을 수 있습니다.',
+                  style: AppTextStyle.pretendard_18_regular,
+                ),
+                SizedBox(height: 32.h),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < _controllers.length; i++)
+                          Column(
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              Stack(
+                                clipBehavior: Clip.none,
                                 children: [
-                                  TextFormField(
-                                    controller: _controllers[i],
-                                    keyboardType: TextInputType.emailAddress,
-                                    onChanged: (_) => _validateEmail(i),
-                                    decoration: InputDecoration(
-                                      hintText:
-                                          _controllers[i].text.isEmpty
-                                              ? '이메일을 입력해주세요'
-                                              : null,
-                                      hintStyle: const TextStyle(
-                                        color: Colors.grey,
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16.w,
-                                        vertical: 15.h,
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          12.r,
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      TextFormField(
+                                        controller: _controllers[i],
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        onChanged: (_) => _validateEmail(i),
+                                        decoration: InputDecoration(
+                                          hintText:
+                                              _controllers[i].text.isEmpty
+                                                  ? '이메일을 입력해주세요'
+                                                  : null,
+                                          hintStyle: const TextStyle(
+                                            color: Colors.grey,
+                                          ),
+                                          contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 16.w,
+                                            vertical: 15.h,
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12.r,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color:
+                                                  _errorMessages.containsKey(i)
+                                                      ? Colors.red
+                                                      : const Color(0xFFFB6B00),
+                                              width: 1.5.w,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12.r,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color:
+                                                  _errorMessages.containsKey(i)
+                                                      ? Colors.red
+                                                      : const Color(0xFFFB6B00),
+                                              width: 1.5.w,
+                                            ),
+                                          ),
                                         ),
-                                        borderSide: BorderSide(
-                                          color:
-                                              _errorMessages.containsKey(i)
-                                                  ? Colors.red
-                                                  : const Color(0xFFFB6B00),
-                                          width: 1.5.w,
-                                        ),
                                       ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          12.r,
+                                      if (_errorMessages.containsKey(i))
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                            top: 4.h,
+                                            left: 8.w,
+                                          ),
+                                          child: Text(
+                                            _errorMessages[i]!,
+                                            style: TextStyle(
+                                              color: Colors.red,
+                                              fontSize: 12.sp,
+                                            ),
+                                          ),
                                         ),
-                                        borderSide: BorderSide(
-                                          color:
-                                              _errorMessages.containsKey(i)
-                                                  ? Colors.red
-                                                  : const Color(0xFFFB6B00),
-                                          width: 1.5.w,
-                                        ),
-                                      ),
-                                    ),
+                                    ],
                                   ),
-                                  if (_errorMessages.containsKey(i))
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                        top: 4.h,
-                                        left: 8.w,
-                                      ),
-                                      child: Text(
-                                        _errorMessages[i]!,
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontSize: 12.sp,
+                                  if (i > 0)
+                                    Positioned(
+                                      top: -8.h,
+                                      right: -8.w,
+                                      child: GestureDetector(
+                                        onTap: () => _removeEmailField(i),
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Container(
+                                          width: 20.w,
+                                          height: 20.h,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.white,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(
+                                                  0.2,
+                                                ),
+                                                blurRadius: 3,
+                                                spreadRadius: 1,
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Center(
+                                            child: Icon(
+                                              Icons.close,
+                                              size: 16,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
                                 ],
                               ),
-
-                              Positioned(
-                                top: -8.h,
-                                right: -8.w,
-                                child: GestureDetector(
-                                  onTap: () => _removeEmailField(i),
-                                  behavior: HitTestBehavior.opaque,
-                                  child: Container(
-                                    width: 20.w,
-                                    height: 20.h,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
-                                          blurRadius: 3,
-                                          spreadRadius: 1,
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Center(
-                                      child: Icon(
-                                        Icons.close,
-                                        size: 16,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
+                              SizedBox(height: 26.h),
                             ],
                           ),
-                          SizedBox(height: 26.h),
-                        ],
-                      ),
-                    if (_controllers.length < MAX_EMAIL_COUNT)
-                      GestureDetector(
-                        onTap: _addEmailField,
-                        behavior: HitTestBehavior.opaque,
-                        child: Container(
-                          margin: EdgeInsets.only(bottom: 16.h),
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFBB279),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Center(
-                            child: Icon(
-                              Icons.add,
-                              color: Colors.white,
-                              size: 24.sp,
+                        if (_controllers.length < MAX_EMAIL_COUNT)
+                          GestureDetector(
+                            onTap: _addEmailField,
+                            behavior: HitTestBehavior.opaque,
+                            child: Container(
+                              margin: EdgeInsets.only(bottom: 16.h),
+                              padding: EdgeInsets.symmetric(vertical: 16.h),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFBB279),
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 24.sp,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                  ],
+                        SizedBox(height: 100.h),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-            GestureDetector(
-              onTap:
-                  _isButtonEnabled
-                      ? () {
-                        List<String> validEmails = [];
-                        for (var controller in _controllers) {
-                          if (controller.text.isNotEmpty &&
-                              _isValidEmail(controller.text)) {
-                            validEmails.add(controller.text);
+          ),
+
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 40.h,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.w),
+              child: GestureDetector(
+                onTap:
+                    _isButtonEnabled
+                        ? () {
+                          List<String> validEmails = [];
+                          for (var controller in _controllers) {
+                            if (controller.text.isNotEmpty &&
+                                _isValidEmail(controller.text)) {
+                              validEmails.add(controller.text);
+                            }
+                          }
+
+                          if (validEmails.isNotEmpty) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const EmailFrequencyPage(),
+                              ),
+                            );
                           }
                         }
-
-                        if (validEmails.isNotEmpty) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const EmailFrequencyPage(),
-                            ),
-                          );
-                        }
-                      }
-                      : null,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: 329.w,
-                margin: EdgeInsets.only(bottom: 88.h),
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-                decoration: BoxDecoration(
-                  color:
-                      _isButtonEnabled ? const Color(0xFFFF6B00) : Colors.grey,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Center(
-                  child: Text(
-                    '다음',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                        : null,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  decoration: BoxDecoration(
+                    color:
+                        _isButtonEnabled
+                            ? const Color(0xFFFF6B00)
+                            : Colors.grey,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '다음',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
