@@ -195,6 +195,17 @@ class HomeViewModel extends _$HomeViewModel {
       _recordingState = RecordingState.uploading;
       state = const AsyncValue.data(null);
 
+      // 파일 크기 확인 및 출력
+      int totalSize = 0;
+      for (int i = 0; i < _recordingFiles.length; i++) {
+        final fileSize = await _recordingFiles[i].length();
+        totalSize += fileSize;
+        print('파일 ${i + 1}의 크기: ${(fileSize / 1024).toStringAsFixed(2)} KB');
+      }
+      print(
+        '총 파일 크기: ${(totalSize / 1024).toStringAsFixed(2)} KB (${(totalSize / (1024 * 1024)).toStringAsFixed(2)} MB)',
+      );
+
       // 로그인한 사용자 이름 가져오기
       final loginInfo = ref.read(loginInfoProvider);
       final userName = loginInfo?.name;
