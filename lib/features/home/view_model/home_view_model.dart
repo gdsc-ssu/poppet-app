@@ -8,6 +8,7 @@ import 'package:pet/core/api/chat_repository.dart';
 import 'package:pet/core/api/models/chat_response.dart';
 import 'package:pet/core/provider/login_provider.dart';
 import 'package:pet/core/utils/audio_utils.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import '../view/home_page.dart'; // isPlayingAudioProvider 가져오기
 
 part 'home_view_model.g.dart';
@@ -21,6 +22,8 @@ enum RecordingState {
   uploaded, // 업로드 완료
 }
 
+// ... 생략된 import는 동일합니다
+
 @riverpod
 class HomeViewModel extends _$HomeViewModel {
   final _audioRecorder = AudioRecorder();
@@ -31,7 +34,7 @@ class HomeViewModel extends _$HomeViewModel {
   final List<File> _recordingFiles = [];
   int _elapsedSeconds = 0;
   ChatResponse? _lastChatResponse;
-  bool _isSegmentRecording = false; // 세그먼트 녹음 중인지 여부
+  bool _isSegmentRecording = false;
 
   ChatRepository get _chatRepository => ref.read(chatRepositoryProvider);
 
@@ -45,7 +48,6 @@ class HomeViewModel extends _$HomeViewModel {
     });
   }
 
-  // 임시 파일 정리
   void _cleanupTempFiles() {
     for (final file in _recordingFiles) {
       if (file.existsSync()) {
@@ -60,43 +62,48 @@ class HomeViewModel extends _$HomeViewModel {
 
   Future<void> toggleRecording() async {
     if (_recordingState == RecordingState.initial) {
-      _recordingFiles.clear(); // 녹음 시작 시 파일 목록 초기화
+      _recordingFiles.clear();
       await _startRecording();
     } else if (_recordingState == RecordingState.recording) {
-      await _stopRecording(uploadImmediately: true); // 사용자가 중지 버튼을 누를 때만 업로드
+      await _stopRecording(uploadImmediately: true);
     } else {
-      // 녹음 완료 상태에서 다시 초기 상태로 돌아감
       _recordingState = RecordingState.initial;
       _recordingFiles.clear();
       state = const AsyncValue.data(null);
     }
   }
 
-  Future<void> requestMicrophonePermission() async {
-    PermissionStatus status = await Permission.microphone.status;
-    if (status.isDenied) {
-      await Permission.microphone.request();
+  /// ✅ 권한 요청을 통합
+  Future<bool> _requestAllPermissions() async {
+    final mic = await Permission.microphone.status;
+    if (!mic.isGranted) {
+      final micResult = await Permission.microphone.request();
+      if (!micResult.isGranted) {
+        print('❌ 마이크 권한이 거부됨');
+        return false;
+      }
     }
+
+    // Android 13 이상이면 저장소 권한 생략 가능 (record 패키지 자체에서 저장함)
+    if (Platform.isAndroid) {
+      final deviceInfo = await DeviceInfoPlugin().androidInfo;
+      final sdkInt = deviceInfo.version.sdkInt;
+
+      if (sdkInt < 33) {
+        final storage = await Permission.storage.request();
+        if (!storage.isGranted) {
+          print('❌ 저장소 권한 거부됨');
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   Future<void> _startRecording() async {
-    // 기존 타이머 취소
     _recordingTimer?.cancel();
     _elapsedTimer?.cancel();
-
-    await requestMicrophonePermission();
-    final micStatus = await Permission.microphone.request();
-    final storageStatus = await Permission.storage.request();
-
-    if (micStatus != PermissionStatus.granted) {
-      print('Microphone permission not granted');
-      return;
-    }
-
-    if (storageStatus != PermissionStatus.granted) {
-      print('Storage permission not granted');
-      return;
-    }
 
     await _startSegmentRecording();
 
@@ -104,20 +111,16 @@ class HomeViewModel extends _$HomeViewModel {
     _elapsedSeconds = 0;
     state = const AsyncValue.data(null);
 
-    // 경과 시간 타이머 시작
     _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _elapsedSeconds++;
       state = const AsyncValue.data(null);
     });
   }
 
-  // 세그먼트 녹음 시작 (59초 단위로 녹음 파일 분할)
   Future<void> _startSegmentRecording() async {
     if (_isSegmentRecording) return;
-
     _isSegmentRecording = true;
 
-    // 임시 디렉토리 가져오기
     final tempDir = await getTemporaryDirectory();
     final filePath = '${tempDir.path}/recording_$_fileCounter.flac';
 
@@ -131,11 +134,10 @@ class HomeViewModel extends _$HomeViewModel {
         path: filePath,
       );
 
-      // 59초 후에 현재 세그먼트 중지하고 새 세그먼트 시작
       _recordingTimer = Timer(const Duration(seconds: 59), () async {
         await _stopRecording(uploadImmediately: false);
         if (_recordingState == RecordingState.recording) {
-          await _startSegmentRecording(); // 새 세그먼트 시작
+          await _startSegmentRecording();
         }
       });
     } catch (e) {
@@ -161,13 +163,10 @@ class HomeViewModel extends _$HomeViewModel {
         }
 
         if (uploadImmediately) {
-          // 모든 녹음 중지 및 업로드 진행
           _elapsedTimer?.cancel();
           _elapsedSeconds = 0;
           _recordingState = RecordingState.completed;
           state = const AsyncValue.data(null);
-
-          // 모든 녹음 파일 업로드
           await _uploadRecordings();
         }
       } catch (e) {
@@ -175,12 +174,10 @@ class HomeViewModel extends _$HomeViewModel {
         print('Stop recording error: $e');
       }
     } else if (uploadImmediately) {
-      // 녹음 중이 아니더라도 중지 버튼을 눌렀다면 업로드 진행
       _elapsedTimer?.cancel();
       _elapsedSeconds = 0;
       _recordingState = RecordingState.completed;
       state = const AsyncValue.data(null);
-
       await _uploadRecordings();
     }
   }
@@ -195,24 +192,18 @@ class HomeViewModel extends _$HomeViewModel {
       _recordingState = RecordingState.uploading;
       state = const AsyncValue.data(null);
 
-      // 파일 크기 확인 및 출력
       int totalSize = 0;
       for (int i = 0; i < _recordingFiles.length; i++) {
         final fileSize = await _recordingFiles[i].length();
         totalSize += fileSize;
         print('파일 ${i + 1}의 크기: ${(fileSize / 1024).toStringAsFixed(2)} KB');
       }
-      print(
-        '총 파일 크기: ${(totalSize / 1024).toStringAsFixed(2)} KB (${(totalSize / (1024 * 1024)).toStringAsFixed(2)} MB)',
-      );
 
-      // 로그인한 사용자 이름 가져오기
       final loginInfo = ref.read(loginInfoProvider);
       final userName = loginInfo?.name;
 
       print('카카오 로그인 정보: $userName, 파일 수: ${_recordingFiles.length}');
 
-      // 여러 FLAC 오디오 파일 업로드
       final response = await _chatRepository.uploadMultipleFlacFiles(
         _recordingFiles,
         name: userName,
@@ -220,30 +211,20 @@ class HomeViewModel extends _$HomeViewModel {
 
       if (response != null) {
         _lastChatResponse = response;
-
         print('Audio uploaded successfully: ${response.message}');
 
-        // 업로드 성공 후 임시 파일 정리
         _cleanupTempFiles();
         _recordingFiles.clear();
 
-        // 응답에 base64 데이터가 있으면 오디오 재생
         if (response.data != null && response.data!.isNotEmpty) {
           try {
-            // 재생 상태 설정
             ref.read(isPlayingAudioProvider.notifier).state = true;
-
             print('Playing audio from response data');
 
-            // 오디오 재생
             await AudioUtils.playBase64Audio(response.data!);
-            print('Audio played successfully');
-
-            // 재생 완료 후 상태 초기화
             ref.read(isPlayingAudioProvider.notifier).state = false;
             resetToInitial();
           } catch (e) {
-            // 오류 발생 시 상태 초기화
             ref.read(isPlayingAudioProvider.notifier).state = false;
             print('Audio playback error: $e');
           }
@@ -270,13 +251,13 @@ class HomeViewModel extends _$HomeViewModel {
   RecordingState get recordingState => _recordingState;
   List<File> get recordingFiles => List.unmodifiable(_recordingFiles);
   ChatResponse? get lastChatResponse => _lastChatResponse;
+
   String get elapsedTime {
     final minutes = (_elapsedSeconds ~/ 60).toString().padLeft(2, '0');
     final seconds = (_elapsedSeconds % 60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
   }
 
-  // 초기 상태로 화면 리셋
   void resetToInitial() {
     _recordingState = RecordingState.initial;
     _recordingFiles.clear();
