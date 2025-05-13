@@ -15,15 +15,9 @@ class AuthRepository {
 
   Future<bool> loginWithKakao(String accessToken) async {
     try {
-      final response = await _apiService.oAuthKakao({
+      final response = await _apiService.loginWithKakao({
         'accessToken': accessToken,
       });
-
-      // 토큰 저장
-      await _appStorage.saveToken(response.accessToken.token);
-
-      // Dio 클라이언트에 토큰 설정
-      await DioClient.setToken(response.accessToken.token);
 
       return true;
     } catch (e) {

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pet/core/api/api_service.dart';
 import 'package:pet/core/network/dio_client.dart';
 import 'package:pet/core/provider/login_provider.dart';
 import 'package:pet/core/storage/app_storage.dart';
-import '../service/kakao_auth_service.dart';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // SecureStorage 유틸리티 클래스 추가
@@ -47,56 +48,33 @@ class SecureStorageUtils {
   }
 }
 
-final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final kakaoAuthService = ref.watch(kakaoAuthServiceProvider);
-  final appStorage = ref.watch(appStorageProvider).valueOrNull;
-  return AuthNotifier(kakaoAuthService, ref, appStorage);
-});
-
 class AuthNotifier extends StateNotifier<AuthState> {
-  final KakaoAuthService _kakaoAuthService;
   final Ref _ref;
   final AppStorage? _storage;
+  final ApiService _apiService;
 
-  AuthNotifier(this._kakaoAuthService, this._ref, this._storage)
+  AuthNotifier(this._ref, this._storage, this._apiService)
     : super(AuthState.unauthenticated());
 
   Future<void> signInWithKakao(BuildContext context) async {
-    // 인가 코드 방식의 로그인 메서드를 사용
-    await signInWithKakaoAuthCode(context);
-  }
-
-  Future<void> signInWithKakaoAuthCode(BuildContext context) async {
-    state = AuthState.loading();
-
     try {
-      // 카카오 인가 코드 방식으로 로그인 시도
-      final success = await _kakaoAuthService.signInWithKakaoAuthCode(context);
-
-      if (success) {
-        try {
-          // 백엔드 API 통신 제거 - 인가 코드 전송 이후 추가 API 호출 없음
-
-          // 로그인 성공 시 홈 화면으로 항상 이동
-          if (context.mounted) {
-            // 기존 홈으로 가는 리스너 대신 즉시 홈으로 이동
-            context.go('/home');
-          }
-        } catch (e) {
-          debugPrint('인증 후처리 실패: $e');
-          // 실패해도 인증 상태로 설정하고 홈으로 이동
-          state = AuthState.authenticated(null);
-          if (context.mounted) {
-            context.go('/home');
-          }
-        }
+      OAuthToken token;
+      if (await isKakaoTalkInstalled()) {
+        token = await UserApi.instance.loginWithKakaoTalk();
       } else {
-        // 로그인 실패 처리 (이미 KakaoAuthService에서 스낵바 표시)
-        state = AuthState.unauthenticated();
+        token = await UserApi.instance.loginWithKakaoAccount();
       }
+
+      await SecureStorageUtils.setAccessToken(token.accessToken);
+      await SecureStorageUtils.setRefreshToken(token.idToken ?? '');
+
+      final authResponse = await ApiService(
+        DioClient.dio,
+      ).loginWithKakao({"accessToken": token.accessToken});
+      if (!context.mounted) return;
+      context.go('/home');
     } catch (error) {
       debugPrint('카카오 로그인 실패: $error');
-      state = AuthState.unauthenticated();
       if (error is! PlatformException || error.code != 'CANCELED') {
         if (context.mounted) {
           ScaffoldMessenger.of(
@@ -107,8 +85,41 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> signInWithGoogle(BuildContext context) async {
+    final _googleSignIn = GoogleSignIn();
+
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        debugPrint('User canceled Google Sign-In');
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final String accessToken = googleAuth.accessToken!;
+      final String idToken = googleAuth.idToken!;
+
+      await SecureStorageUtils.setAccessToken(accessToken);
+      await SecureStorageUtils.setRefreshToken(idToken);
+
+      final authResponse = await ApiService(
+        DioClient.dio,
+      ).loginWithGoogle({"accessToken": accessToken, 'idToken': idToken});
+
+      if (!context.mounted) return;
+      context.go('/home');
+    } catch (e) {
+      debugPrint('Error during Google Sign-In: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('구글 로그인 중 오류가 발생했습니다: $e')));
+      }
+    }
+  }
+
   Future<void> logout() async {
-    await _kakaoAuthService.logout();
     await SecureStorageUtils.clearAll();
     state = AuthState.unauthenticated();
   }
@@ -116,24 +127,58 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
 class AuthState {
   final bool isAuthenticated;
-  final bool isLoading;
+  final bool isKakaoLoading;
+  final bool isGoogleLoading;
   final User? user;
 
   AuthState({
     required this.isAuthenticated,
-    required this.isLoading,
+    required this.isKakaoLoading,
+    required this.isGoogleLoading,
     this.user,
   });
 
+  bool get isLoading => isKakaoLoading || isGoogleLoading;
+
   factory AuthState.unauthenticated() {
-    return AuthState(isAuthenticated: false, isLoading: false);
+    return AuthState(
+      isAuthenticated: false,
+      isKakaoLoading: false,
+      isGoogleLoading: false,
+    );
   }
 
   factory AuthState.authenticated(User? user) {
-    return AuthState(isAuthenticated: true, isLoading: false, user: user);
+    return AuthState(
+      isAuthenticated: true,
+      isKakaoLoading: false,
+      isGoogleLoading: false,
+      user: user,
+    );
   }
 
-  factory AuthState.loading() {
-    return AuthState(isAuthenticated: false, isLoading: true);
+  factory AuthState.kakaoLoading() {
+    return AuthState(
+      isAuthenticated: false,
+      isKakaoLoading: true,
+      isGoogleLoading: false,
+    );
+  }
+
+  factory AuthState.googleLoading() {
+    return AuthState(
+      isAuthenticated: false,
+      isKakaoLoading: false,
+      isGoogleLoading: true,
+    );
   }
 }
+
+// Add the missing provider
+final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final apiService = ref.watch(apiServiceProvider);
+
+  // Handle AsyncValue case by passing null for storage
+  // ApiService is already available directly
+  return AuthNotifier(ref, null, apiService);
+});

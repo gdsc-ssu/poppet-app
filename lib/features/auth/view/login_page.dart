@@ -50,47 +50,97 @@ class LoginPage extends ConsumerWidget {
               const Spacer(),
               InkWell(
                 onTap: () {
-                  // 카카오 로그인 실행 (인가 코드 방식)
-                  ref
-                      .read(authStateProvider.notifier)
-                      .signInWithKakaoAuthCode(context);
+                  if (!authState.isGoogleLoading) {
+                    ref
+                        .read(authStateProvider.notifier)
+                        .signInWithGoogle(context);
+                  }
                 },
                 child: Container(
                   width: double.infinity,
-                  height: 48.h,
+                  height: 54.h,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFEE500),
-                    borderRadius: BorderRadius.circular(8.r),
+                    color: const Color(0xFFF2F2F2),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
                   child:
-                      authState.isLoading
+                      authState.isGoogleLoading
                           ? const Center(
                             child: CircularProgressIndicator(
                               color: Color(0xFF191919),
                             ),
                           )
                           : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              SizedBox(width: 23.w),
                               Image.asset(
-                                'assets/images/kakao.png',
+                                'assets/images/googleLogo.png',
                                 width: 24.w,
                                 height: 24.w,
                               ),
-                              SizedBox(width: 8.w),
-                              Text(
-                                '카카오로 로그인하기',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF191919),
+                              Expanded(
+                                child: Text(
+                                  'Google 계정으로 로그인하기',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
+                              SizedBox(width: 23.w),
                             ],
                           ),
                 ),
               ),
-              SizedBox(height: 48.h),
+              Container(height: 10.h),
+              InkWell(
+                onTap: () {
+                  // 카카오 로그인 실행 (인가 코드 방식)
+                  if (!authState.isKakaoLoading) {
+                    ref
+                        .read(authStateProvider.notifier)
+                        .signInWithKakao(context);
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 54.h,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE500),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child:
+                      authState.isKakaoLoading
+                          ? const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF191919),
+                            ),
+                          )
+                          : Row(
+                            children: [
+                              SizedBox(width: 23.w),
+                              Image.asset(
+                                'assets/images/kakao.png',
+                                width: 18.w,
+                                height: 18.w,
+                              ),
+                              Expanded(
+                                child: Text(
+                                  '카카오로 로그인하기',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 23.w),
+                            ],
+                          ),
+                ),
+              ),
+              SizedBox(height: 78.h),
             ],
           ),
         ),

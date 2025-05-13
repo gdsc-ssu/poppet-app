@@ -13,8 +13,10 @@ part 'api_service.g.dart';
 abstract class ApiService {
   factory ApiService(Dio dio) = _ApiService;
 
-  @GET('/auth/login/kakao')
-  Future<AuthResponse> loginWithKakao(@Query('code') String code);
+  @POST('/auth/login/kakao')
+  Future<AuthResponse> loginWithKakao(@Body() Map<String, String> loginData);
+  @POST('/auth/login/google')
+  Future<AuthResponse> loginWithGoogle(@Body() Map<String, String> loginData);
 
   @GET('/user/me')
   Future<UserInfo> getUserInfo();

@@ -28,6 +28,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // AppAuth 리디렉션 스키마 추가
+        manifestPlaceholders["appAuthRedirectScheme"] = "com.example.pet"
     }
 
     buildTypes {
