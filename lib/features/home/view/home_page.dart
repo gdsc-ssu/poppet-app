@@ -120,7 +120,7 @@ class HomePage extends ConsumerWidget {
                       top: 0,
                       child: Container(
                         width: 393.w,
-                        height: 160.h,
+                        height: 150.h,
                         decoration: ShapeDecoration(
                           color: Color(0xFFfbb279), // 동일한 살구색
                           shape: OvalBorder(),
@@ -131,10 +131,10 @@ class HomePage extends ConsumerWidget {
                     // 하단 직사각형 부분 (겹침 없이 따로 적용)
                     Positioned(
                       left: 0,
-                      top: 100, // 적절한 위치 조정
+                      top: 80, // 적절한 위치 조정
                       child: Container(
                         width: 393.w,
-                        height: 100.h, // 겹치는 부분을 제거하도록 조정
+                        height: 200.h, // 겹치는 부분을 제거하도록 조정
                         color: Color(0xFFfbb279), // 동일한 색상
                       ),
                     ),

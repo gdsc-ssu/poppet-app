@@ -71,6 +71,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final authResponse = await ApiService(
         DioClient.dio,
       ).loginWithKakao({"accessToken": token.accessToken});
+
+      // 로그인 정보 저장
+      final userName = authResponse.data.name;
+      final userInfo = UserInfo(name: userName);
+      _ref.read(loginInfoProvider.notifier).setLoginInfo(userInfo);
+
       if (!context.mounted) return;
       context.go('/home');
     } catch (error) {
@@ -106,6 +112,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final authResponse = await ApiService(
         DioClient.dio,
       ).loginWithGoogle({"accessToken": accessToken, 'idToken': idToken});
+
+      // 로그인 정보 저장
+      final userName = authResponse.data.name;
+      final userInfo = UserInfo(name: userName);
+      _ref.read(loginInfoProvider.notifier).setLoginInfo(userInfo);
 
       if (!context.mounted) return;
       context.go('/home');
