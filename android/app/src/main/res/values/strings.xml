@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">poppet</string>
+    <!-- 아래 클라이언트 ID는 예시입니다. 실제 Google Developer Console에서 발급받은 클라이언트 ID로 교체해야 합니다 -->
+    <string name="server_client_id">YOUR_WEB_CLIENT_ID.apps.googleusercontent.com</string>
+    <string name="client_id">YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com</string>
+</resources> 

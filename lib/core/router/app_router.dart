@@ -7,6 +7,7 @@ import '../../features/home/view/home_page.dart';
 import '../../features/mypage/view/mypage_page.dart';
 import '../../features/onboarding/view/onboarding_page.dart';
 import '../../features/settings/view/email_setting_page.dart';
+
 import '../../features/splash/view/splash_screen.dart';
 
 part 'app_router.g.dart';

@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../../core/storage/app_storage.dart';
+import '../../../../core/storage/secure_storage_utils.dart';
 import '../models/user_model.dart';
 import 'auth_client.dart';
 
@@ -8,9 +8,8 @@ part 'auth_repository.g.dart';
 
 class AuthRepository {
   final AuthClient _authClient;
-  final AppStorage _storage;
 
-  AuthRepository(this._authClient, this._storage);
+  AuthRepository(this._authClient);
 
   Future<UserModel> login(String email, String password) async {
     final response = await _authClient.login({
@@ -19,7 +18,7 @@ class AuthRepository {
     });
 
     // Save user data to local storage
-    await _storage.saveUserId(response.id);
+    await SecureStorageUtils.setUserId(response.id);
     // You might want to save token here if your API returns one
 
     return response;
@@ -49,15 +48,14 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
-    await _storage.clearAll();
+    await SecureStorageUtils.clearAll();
   }
 }
 
 @riverpod
 AuthRepository authRepository(AuthRepositoryRef ref) {
   final dio = ref.watch(dioClientProvider);
-  final storage = ref.watch(appStorageProvider).value!;
   final authClient = AuthClient(dio);
 
-  return AuthRepository(authClient, storage);
+  return AuthRepository(authClient);
 }

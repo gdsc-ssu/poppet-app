@@ -1,14 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:go_router/go_router.dart';
 import 'package:pet/core/api/api_service.dart';
 import 'package:pet/core/network/dio_client.dart';
 import 'package:pet/core/provider/login_provider.dart';
-import 'package:pet/core/storage/app_storage.dart';
-import '../service/kakao_auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide UserInfo;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:dio/dio.dart';
 
 // SecureStorage 유틸리티 클래스 추가
 class SecureStorageUtils {
@@ -47,102 +50,50 @@ class SecureStorageUtils {
   }
 }
 
-final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final kakaoAuthService = ref.watch(kakaoAuthServiceProvider);
-  final appStorage = ref.watch(appStorageProvider).valueOrNull;
-  return AuthNotifier(kakaoAuthService, ref, appStorage);
-});
-
 class AuthNotifier extends StateNotifier<AuthState> {
-  final KakaoAuthService _kakaoAuthService;
   final Ref _ref;
-  final AppStorage? _storage;
+  final ApiService _apiService;
 
-  AuthNotifier(this._kakaoAuthService, this._ref, this._storage)
+  AuthNotifier(this._ref, this._apiService)
     : super(AuthState.unauthenticated());
 
   Future<void> signInWithKakao(BuildContext context) async {
-    state = AuthState.loading();
-
     try {
-      OAuthToken token;
-      if (await isKakaoTalkInstalled()) {
-        token = await UserApi.instance.loginWithKakaoTalk();
+      kakao.OAuthToken token;
+      if (await kakao.isKakaoTalkInstalled()) {
+        token = await kakao.UserApi.instance.loginWithKakaoTalk();
       } else {
-        token = await UserApi.instance.loginWithKakaoAccount();
+        token = await kakao.UserApi.instance.loginWithKakaoAccount();
       }
 
-      // 토큰 정보 로그 출력
-      debugPrint('토큰 : ${token}');
-      debugPrint('액세스 토큰: ${token.accessToken}');
-      debugPrint('리프레시 토큰: ${token.refreshToken}');
-      debugPrint('ID 토큰: ${token.idToken}');
-      debugPrint('==========================');
-
-      // Secure Storage에 토큰 저장
       await SecureStorageUtils.setAccessToken(token.accessToken);
-      if (token.refreshToken != null) {
-        await SecureStorageUtils.setRefreshToken(token.refreshToken!);
+      await SecureStorageUtils.setRefreshToken(token.idToken ?? '');
+
+      // Use DioClient directly for access to response headers
+      final response = await DioClient.dio.post(
+        '/auth/login/kakao',
+        data: {"accessToken": token.accessToken},
+      );
+
+      // Process response headers for authorization token
+      final bearer = response.headers['authorization']?.first;
+      if (bearer != null) {
+        final jwtToken = bearer.replaceFirst('Bearer ', '').trim();
+        await SecureStorageUtils.setAccessToken(jwtToken);
+        await DioClient.setToken(jwtToken);
       }
 
-      // 백엔드 서버로 카카오 토큰 전송
-      try {
-        final authResponse = await ApiService(
-          DioClient.dio,
-        ).oAuthKakao({"accessToken": token.accessToken});
-
-        // 백엔드 토큰 정보 로그 출력
-        debugPrint('===== 백엔드 토큰 정보 =====');
-        debugPrint('백엔드 토큰: ${authResponse.accessToken.token}');
-        debugPrint('============================');
-
-        // 백엔드 토큰 설정
-        await DioClient.setToken(authResponse.accessToken.token);
-
-        // 사용자 정보 가져오기
-        try {
-          // 백엔드에서 사용자 정보 가져오기
-          final userInfo = await ApiService(DioClient.dio).getUserInfo();
-          final loginInfoNotifier = _ref.read(loginInfoProvider.notifier);
-          loginInfoNotifier.setLoginInfo(userInfo);
-
-          // 카카오에서 사용자 정보 가져오기 (백업용)
-          final kakaoUser = await UserApi.instance.me();
-          await SecureStorageUtils.setUserId(kakaoUser.id.toString());
-
-          state = AuthState.authenticated(kakaoUser);
-
-          // 로그인 성공 시 홈 화면으로 이동
-          if (context.mounted) {
-            context.go('/home');
-          }
-        } catch (e) {
-          debugPrint('사용자 정보 가져오기 실패: $e');
-          state = AuthState.unauthenticated();
-        }
-      } catch (e) {
-        debugPrint('백엔드 서버 통신 실패: $e');
-
-        // 백엔드 서버 통신 실패 시에도 카카오 사용자 정보는 가져오기 시도
-        try {
-          final kakaoUser = await UserApi.instance.me();
-          await SecureStorageUtils.setUserId(kakaoUser.id.toString());
-          state = AuthState.authenticated(kakaoUser);
-
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('백엔드 서버 연결 실패. 일부 기능이 제한될 수 있습니다.')),
-            );
-          }
-        } catch (userError) {
-          debugPrint('카카오 사용자 정보 가져오기 실패: $userError');
-          state = AuthState.unauthenticated();
-        }
+      // Process response data
+      if (response.data != null && response.data['data'] != null) {
+        final userName = response.data['data']['name'];
+        final userInfo = UserInfo(name: userName);
+        _ref.read(loginInfoProvider.notifier).setLoginInfo(userInfo);
       }
+
+      if (!context.mounted) return;
+      context.go('/home');
     } catch (error) {
       debugPrint('카카오 로그인 실패: $error');
-      state = AuthState.unauthenticated();
-      context.go('/home');
       if (error is! PlatformException || error.code != 'CANCELED') {
         if (context.mounted) {
           ScaffoldMessenger.of(
@@ -153,8 +104,80 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> signInWithGoogle(BuildContext context) async {
+    final _googleSignIn = GoogleSignIn();
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        debugPrint('사용자가 Google 로그인을 취소했습니다.');
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final String? accessToken = googleAuth.accessToken;
+      final String? idToken = googleAuth.idToken;
+
+      if (accessToken == null || idToken == null) {
+        debugPrint('Google 로그인 실패: accessToken 또는 idToken이 null입니다.');
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('구글 로그인에 실패했습니다. 다시 시도해주세요.')));
+        }
+        return;
+      }
+
+      // Secure storage에 토큰 저장
+      await SecureStorageUtils.setAccessToken(accessToken);
+      await SecureStorageUtils.setRefreshToken(idToken);
+
+      final credential = GoogleAuthProvider.credential(
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      // Firebase로 인증
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
+      final firebaseUser = userCredential.user;
+
+      if (firebaseUser == null) {
+        debugPrint('Firebase 인증 실패: 사용자 정보를 가져올 수 없습니다.');
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('인증에 실패했습니다. 다시 시도해주세요.')));
+        }
+        return;
+      }
+
+      // 서버에 로그인 요청
+      final authResponse = await ApiService(
+        DioClient.dio,
+      ).loginWithGoogle({'accessToken': accessToken, 'idToken': idToken});
+
+      final userName = authResponse.data.name;
+      final userInfo = UserInfo(name: userName);
+      _ref.read(loginInfoProvider.notifier).setLoginInfo(userInfo);
+
+      debugPrint('구글 로그인 성공: $userName');
+
+      if (!context.mounted) return;
+      context.go('/home');
+    } catch (e, stackTrace) {
+      debugPrint('Google 로그인 중 오류 발생: $e\n$stackTrace');
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('구글 로그인 중 오류가 발생했습니다: $e')));
+      }
+    }
+  }
+
   Future<void> logout() async {
-    await _kakaoAuthService.logout();
     await SecureStorageUtils.clearAll();
     state = AuthState.unauthenticated();
   }
@@ -162,24 +185,55 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
 class AuthState {
   final bool isAuthenticated;
-  final bool isLoading;
+  final bool isKakaoLoading;
+  final bool isGoogleLoading;
   final User? user;
 
   AuthState({
     required this.isAuthenticated,
-    required this.isLoading,
+    required this.isKakaoLoading,
+    required this.isGoogleLoading,
     this.user,
   });
 
+  bool get isLoading => isKakaoLoading || isGoogleLoading;
+
   factory AuthState.unauthenticated() {
-    return AuthState(isAuthenticated: false, isLoading: false);
+    return AuthState(
+      isAuthenticated: false,
+      isKakaoLoading: false,
+      isGoogleLoading: false,
+    );
   }
 
-  factory AuthState.authenticated(User user) {
-    return AuthState(isAuthenticated: true, isLoading: false, user: user);
+  factory AuthState.authenticated(User? user) {
+    return AuthState(
+      isAuthenticated: true,
+      isKakaoLoading: false,
+      isGoogleLoading: false,
+      user: user,
+    );
   }
 
-  factory AuthState.loading() {
-    return AuthState(isAuthenticated: false, isLoading: true);
+  factory AuthState.kakaoLoading() {
+    return AuthState(
+      isAuthenticated: false,
+      isKakaoLoading: true,
+      isGoogleLoading: false,
+    );
+  }
+
+  factory AuthState.googleLoading() {
+    return AuthState(
+      isAuthenticated: false,
+      isKakaoLoading: false,
+      isGoogleLoading: true,
+    );
   }
 }
+
+// Add the missing provider
+final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final apiService = ref.watch(apiServiceProvider);
+  return AuthNotifier(ref, apiService);
+});

@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_style.dart';
-
+import '../../../core/provider/login_provider.dart';
 import 'privacy_policy_page.dart';
 import 'terms_of_service_page.dart';
 import 'confirmation_popup.dart';
@@ -14,6 +14,8 @@ class MyPagePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final loginInfo = ref.watch(loginInfoProvider);
+
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
@@ -65,7 +67,7 @@ class MyPagePage extends ConsumerWidget {
                               spacing: 4.sp,
                               children: [
                                 Text(
-                                  '할머니',
+                                  loginInfo?.name ?? '사용자',
                                   style: AppTextStyle.pretendard_32_bold
                                       .copyWith(color: AppColors.primary),
                                 ),

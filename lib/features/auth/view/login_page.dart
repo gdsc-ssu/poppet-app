@@ -14,22 +14,9 @@ class LoginPage extends ConsumerWidget {
 
     // 로그인 상태가 변경되면 홈 화면으로 이동
     ref.listen(authStateProvider, (previous, current) {
-      // 이전 상태가 로딩 중이었고, 현재 상태가 인증됨인 경우에만 홈으로 이동
-      if (previous != null &&
-          previous.isLoading &&
-          !current.isLoading &&
-          current.isAuthenticated) {
-        // 사용자 정보 로그 출력
-        final user = current.user;
-        debugPrint('로그인 성공: 사용자 정보');
-        debugPrint('ID: ${user?.id}');
-        debugPrint('닉네임: ${user?.kakaoAccount?.profile?.nickname}');
-        debugPrint('이메일: ${user?.kakaoAccount?.email}');
-        debugPrint('프로필 이미지: ${user?.kakaoAccount?.profile?.profileImageUrl}');
-        debugPrint('성별: ${user?.kakaoAccount?.gender}');
-        debugPrint('연령대: ${user?.kakaoAccount?.ageRange}');
-        debugPrint('전체 정보: $user');
-
+      // 현재 상태가 인증됨인 경우 홈으로 이동
+      if (current.isAuthenticated && !current.isLoading) {
+        // 로그인 성공 시 항상 홈으로 이동
         context.go('/home');
       }
     });
@@ -63,45 +50,97 @@ class LoginPage extends ConsumerWidget {
               const Spacer(),
               InkWell(
                 onTap: () {
-                  // 카카오 로그인 실행
-                  ref.read(authStateProvider.notifier).signInWithKakao(context);
+                  if (!authState.isGoogleLoading) {
+                    ref
+                        .read(authStateProvider.notifier)
+                        .signInWithGoogle(context);
+                  }
                 },
                 child: Container(
                   width: double.infinity,
-                  height: 48.h,
+                  height: 54.h,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFEE500),
-                    borderRadius: BorderRadius.circular(8.r),
+                    color: const Color(0xFFF2F2F2),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
                   child:
-                      authState.isLoading
+                      authState.isGoogleLoading
                           ? const Center(
                             child: CircularProgressIndicator(
                               color: Color(0xFF191919),
                             ),
                           )
                           : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              SizedBox(width: 23.w),
                               Image.asset(
-                                'assets/images/kakao.png',
+                                'assets/images/googleLogo.png',
                                 width: 24.w,
                                 height: 24.w,
                               ),
-                              SizedBox(width: 8.w),
-                              Text(
-                                '카카오로 로그인하기',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF191919),
+                              Expanded(
+                                child: Text(
+                                  'Google 계정으로 로그인하기',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
+                              SizedBox(width: 23.w),
                             ],
                           ),
                 ),
               ),
-              SizedBox(height: 48.h),
+              Container(height: 10.h),
+              InkWell(
+                onTap: () {
+                  // 카카오 로그인 실행 (인가 코드 방식)
+                  if (!authState.isKakaoLoading) {
+                    ref
+                        .read(authStateProvider.notifier)
+                        .signInWithKakao(context);
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 54.h,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE500),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child:
+                      authState.isKakaoLoading
+                          ? const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF191919),
+                            ),
+                          )
+                          : Row(
+                            children: [
+                              SizedBox(width: 23.w),
+                              Image.asset(
+                                'assets/images/kakao.png',
+                                width: 18.w,
+                                height: 18.w,
+                              ),
+                              Expanded(
+                                child: Text(
+                                  '카카오로 로그인하기',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 23.w),
+                            ],
+                          ),
+                ),
+              ),
+              SizedBox(height: 78.h),
             ],
           ),
         ),

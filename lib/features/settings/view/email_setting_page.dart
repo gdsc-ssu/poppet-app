@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/scheduler.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_style.dart';
 import '../view_model/email_setting_view_model.dart';
 import '../view/email_frequency_page.dart';
+import '../../../core/provider/login_provider.dart';
+import '../../../core/api/email_repository.dart';
 
 class EmailSettingPage extends ConsumerStatefulWidget {
   const EmailSettingPage({Key? key}) : super(key: key);
@@ -16,11 +19,13 @@ class EmailSettingPage extends ConsumerStatefulWidget {
 
 class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
   final List<TextEditingController> _controllers = [TextEditingController()];
+  final List<int> _emailIds = [];
   static const int MAX_EMAIL_COUNT = 5;
   final Map<int, String> _errorMessages = {};
-  bool _isButtonEnabled = false; // 버튼 활성화 상태를 추적하는 변수 추가
+  bool _isButtonEnabled = false;
+  bool _initialized = false;
+  bool _isLoading = false;
 
-  // 이메일 유효성 검사 함수
   bool _isValidEmail(String email) {
     final emailRegex = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
@@ -28,13 +33,6 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
     return emailRegex.hasMatch(email);
   }
 
-  // 중복 이메일 확인 함수
-  bool _hasDuplicateEmails(List<String> emails) {
-    final uniqueEmails = emails.toSet();
-    return uniqueEmails.length != emails.length;
-  }
-
-  // 이메일 유효성 검사 및 에러 메시지 업데이트
   void _validateEmail(int index) {
     final email = _controllers[index].text;
     setState(() {
@@ -43,7 +41,6 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
       } else if (!_isValidEmail(email)) {
         _errorMessages[index] = '이메일 형식이 올바르지 않습니다.';
       } else {
-        // 중복 이메일 확인
         bool isDuplicate = false;
         for (int i = 0; i < _controllers.length; i++) {
           if (i != index && _controllers[i].text == email) {
@@ -59,35 +56,138 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
         }
       }
 
-      // 버튼 활성화 상태 업데이트
       _updateButtonState();
     });
   }
 
-  // 버튼 활성화 상태 업데이트 함수
   void _updateButtonState() {
     bool hasValidEmail = false;
+    bool hasErrorEmail = false;
 
-    // 하나 이상의 유효한 이메일이 있는지 확인
-    for (var controller in _controllers) {
-      if (controller.text.isNotEmpty && _isValidEmail(controller.text)) {
-        hasValidEmail = true;
-        break;
+    for (int i = 0; i < _controllers.length; i++) {
+      final email = _controllers[i].text;
+      if (email.isNotEmpty) {
+        if (_isValidEmail(email) && !_errorMessages.containsKey(i)) {
+          hasValidEmail = true;
+        }
+        if (_errorMessages.containsKey(i)) {
+          hasErrorEmail = true;
+        }
       }
     }
 
-    // 에러가 없고 하나 이상의 유효한 이메일이 있으면 버튼 활성화
-    _isButtonEnabled = _errorMessages.isEmpty && hasValidEmail;
+    setState(() {
+      _isButtonEnabled = hasValidEmail && !hasErrorEmail;
+    });
+  }
+
+  Future<void> _fetchEmails() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final loginInfo = ref.read(loginInfoProvider);
+      if (loginInfo == null) {
+        throw Exception('로그인 정보가 없습니다.');
+      }
+
+      final emailRepository = ref.read(emailRepositoryProvider);
+      final emailList = await emailRepository.getUserEmail();
+
+      debugPrint('이메일 응답 데이터: $emailList');
+
+      setState(() {
+        _controllers.clear();
+        _emailIds.clear();
+        _errorMessages.clear();
+
+        if (emailList != null && emailList.isNotEmpty) {
+          // 이메일 목록 추가
+          for (final emailData in emailList) {
+            final emailAddress = emailData.emailAddress;
+            final emailId = emailData.emailId;
+            if (emailAddress.isNotEmpty) {
+              debugPrint('추가되는 이메일: $emailAddress');
+              final controller = TextEditingController(text: emailAddress);
+              _controllers.add(controller);
+              _emailIds.add(emailId);
+
+              // 리스너 추가
+              final index = _controllers.length - 1;
+              controller.addListener(() {
+                _validateEmail(index);
+                _updateButtonState();
+              });
+
+              // 이메일 유효성 검사
+              _validateEmail(index);
+            }
+          }
+        }
+
+        // 컨트롤러가 비어있거나 최대 개수에 도달하지 않았다면 빈 필드 추가
+        if (_controllers.isEmpty || _controllers.length < MAX_EMAIL_COUNT) {
+          final controller = TextEditingController();
+          _controllers.add(controller);
+          _emailIds.add(-1);
+
+          final index = _controllers.length - 1;
+          controller.addListener(() {
+            _validateEmail(index);
+            _updateButtonState();
+          });
+        }
+      });
+
+      _updateButtonState();
+    } catch (e) {
+      debugPrint('이메일 가져오기 실패: $e');
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('이메일을 가져오는데 실패했습니다.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+
+      setState(() {
+        _controllers.clear();
+        _emailIds.clear();
+        _errorMessages.clear();
+        final controller = TextEditingController();
+        _controllers.add(controller);
+        _emailIds.add(-1);
+        controller.addListener(() {
+          _validateEmail(0);
+          _updateButtonState();
+        });
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    // 컨트롤러에 리스너 추가
-    for (var controller in _controllers) {
-      controller.addListener(() {
-        _updateButtonState();
-      });
+    _controllers.first.addListener(() {
+      _validateEmail(0);
+      _updateButtonState();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _fetchEmails();
+      _initialized = true;
     }
   }
 
@@ -99,262 +199,349 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
     super.dispose();
   }
 
-  void _addEmailField() {
+  Future<void> _addEmailField() async {
     if (_controllers.length < MAX_EMAIL_COUNT) {
-      setState(() {
-        final controller = TextEditingController();
-        controller.addListener(() {
-          _updateButtonState();
+      final previousIndex = _controllers.length - 1;
+      final previousEmail = _controllers[previousIndex].text;
+
+      // 이전 이메일이 비어있거나 유효하지 않은 경우
+      if (previousEmail.isEmpty || !_isValidEmail(previousEmail)) {
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('먼저 유효한 이메일을 입력해주세요.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         });
+        return;
+      }
+
+      // 이메일 추가 API 호출 전에 컨트롤러 추가
+      final controller = TextEditingController();
+      setState(() {
         _controllers.add(controller);
-        _updateButtonState();
       });
+
+      try {
+        final loginInfo = ref.read(loginInfoProvider);
+        if (loginInfo == null) {
+          throw Exception('로그인 정보가 없습니다.');
+        }
+
+        final emailRepository = ref.read(emailRepositoryProvider);
+        final success = await emailRepository.addEmail(previousEmail);
+
+        if (success) {
+          // 성공 시 리스너 추가
+          controller.addListener(() {
+            _validateEmail(_controllers.indexOf(controller));
+            _updateButtonState();
+          });
+          _updateButtonState();
+        } else {
+          setState(() {
+            _controllers.removeLast();
+          });
+          if (mounted) {
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('이메일 추가에 실패했습니다.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint('이메일 추가 중 오류 발생: $e');
+        setState(() {
+          _controllers.removeLast();
+        });
+        if (mounted) {
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('이메일 추가 중 오류가 발생했습니다.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          });
+        }
+      }
     }
   }
 
-  void _removeEmailField(int index) {
-    if (_controllers.length > 1 && index > 0) {
-      setState(() {
-        _controllers[index].dispose();
-        _controllers.removeAt(index);
-        // 에러 메시지도 함께 제거
-        _errorMessages.remove(index);
-        // 인덱스 재조정
-        final newErrorMessages = <int, String>{};
-        _errorMessages.forEach((key, value) {
-          if (key > index) {
-            newErrorMessages[key - 1] = value;
-          } else if (key < index) {
-            newErrorMessages[key] = value;
-          }
-        });
-        _errorMessages.clear();
-        _errorMessages.addAll(newErrorMessages);
+  Future<void> _removeEmailField(int index) async {
+    try {
+      final loginInfo = ref.read(loginInfoProvider);
 
-        // 필드 제거 후 버튼 상태 업데이트
-        _updateButtonState();
-      });
+      final emailId = _emailIds[index];
+      final response = await ref
+          .read(emailRepositoryProvider)
+          .deleteUserEmail(id: emailId);
+
+      if (_controllers.length > 1 && index >= 0) {
+        setState(() {
+          _controllers[index].dispose();
+          _controllers.removeAt(index);
+          _emailIds.removeAt(index);
+          _errorMessages.remove(index);
+
+          final newErrorMessages = <int, String>{};
+          _errorMessages.forEach((key, value) {
+            if (key > index) {
+              newErrorMessages[key - 1] = value;
+            } else {
+              newErrorMessages[key] = value;
+            }
+          });
+
+          _errorMessages
+            ..clear()
+            ..addAll(newErrorMessages);
+
+          _updateButtonState();
+        });
+      }
+    } catch (e) {
+      debugPrint('🔥 이메일 삭제 요청 실패: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final emails = ref.watch(emailSettingProvider);
-    final emailNotifier = ref.read(emailSettingProvider.notifier);
-
     return Scaffold(
-      backgroundColor: Color(0xFFFFF9F2), // 배경색 설정
+      backgroundColor: const Color(0xFFFFF9F2),
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => context.pop(),
         ),
-
         centerTitle: true,
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 32.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 24.h),
-            Text('이메일 입력', style: AppTextStyle.pretendard_32_bold),
-            SizedBox(height: 4.h),
-            Text(
-              '보호자의 이메일을 입력해주세요.\n사용자의 대화 내역을 전달받을 수 있습니다.',
-              style: AppTextStyle.pretendard_18_regular,
-            ),
-            SizedBox(height: 32.h),
-
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    for (int i = 0; i < _controllers.length; i++)
-                      Column(
-                        children: [
-                          Stack(
-                            clipBehavior: Clip.none,
+      body: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 24.h),
+                Text('이메일 입력', style: AppTextStyle.pretendard_32_bold),
+                SizedBox(height: 4.h),
+                Text(
+                  '보호자의 이메일을 입력해주세요.\n사용자의 대화 내역을 전달받을 수 있습니다.',
+                  style: AppTextStyle.pretendard_18_regular,
+                ),
+                SizedBox(height: 32.h),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < _controllers.length; i++)
+                          Column(
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              Stack(
+                                clipBehavior: Clip.none,
                                 children: [
-                                  TextFormField(
-                                    controller: _controllers[i],
-                                    keyboardType: TextInputType.emailAddress,
-                                    onChanged: (_) => _validateEmail(i),
-                                    decoration: InputDecoration(
-                                      hintText: '이메일을 입력해주세요',
-                                      hintStyle: TextStyle(color: Colors.grey),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16.w,
-                                        vertical: 15.h,
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      TextFormField(
+                                        controller: _controllers[i],
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        onChanged: (_) => _validateEmail(i),
+                                        decoration: InputDecoration(
+                                          hintText:
+                                              _controllers[i].text.isEmpty
+                                                  ? '이메일을 입력해주세요'
+                                                  : null,
+                                          hintStyle: const TextStyle(
+                                            color: Colors.grey,
+                                          ),
+                                          contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 16.w,
+                                            vertical: 15.h,
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12.r,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color:
+                                                  _errorMessages.containsKey(i)
+                                                      ? Colors.red
+                                                      : const Color(0xFFFB6B00),
+                                              width: 1.5.w,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12.r,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color:
+                                                  _errorMessages.containsKey(i)
+                                                      ? Colors.red
+                                                      : const Color(0xFFFB6B00),
+                                              width: 1.5.w,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          12.r,
+                                      if (_errorMessages.containsKey(i))
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                            top: 4.h,
+                                            left: 8.w,
+                                          ),
+                                          child: Text(
+                                            _errorMessages[i]!,
+                                            style: TextStyle(
+                                              color: Colors.red,
+                                              fontSize: 12.sp,
+                                            ),
+                                          ),
                                         ),
-                                        borderSide: BorderSide(
-                                          color:
-                                              _errorMessages.containsKey(i)
-                                                  ? Colors.red
-                                                  : Color(0xFFFB6B00),
-                                          width: 1.5.w,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          12.r,
-                                        ),
-                                        borderSide: BorderSide(
-                                          color:
-                                              _errorMessages.containsKey(i)
-                                                  ? Colors.red
-                                                  : Color(0xFFFB6B00),
-                                          width: 1.5.w,
-                                        ),
-                                      ),
-                                    ),
+                                    ],
                                   ),
-                                  if (_errorMessages.containsKey(i))
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                        top: 4.h,
-                                        left: 8.w,
-                                      ),
-                                      child: Text(
-                                        _errorMessages[i]!,
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontSize: 12.sp,
+                                  if (i > 0)
+                                    Positioned(
+                                      top: -8.h,
+                                      right: -8.w,
+                                      child: GestureDetector(
+                                        onTap: () => _removeEmailField(i),
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Container(
+                                          width: 20.w,
+                                          height: 20.h,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.white,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(
+                                                  0.2,
+                                                ),
+                                                blurRadius: 3,
+                                                spreadRadius: 1,
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Center(
+                                            child: Icon(
+                                              Icons.close,
+                                              size: 16,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
                                 ],
                               ),
-
-                              if (i > 0)
-                                Positioned(
-                                  top: -8.h,
-                                  right: -8.w,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      _removeEmailField(i);
-                                    },
-                                    behavior: HitTestBehavior.opaque,
-                                    child: Container(
-                                      width: 20.w,
-                                      height: 20.h,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(
-                                                0.2,
-                                              ),
-                                              blurRadius: 3,
-                                              spreadRadius: 1,
-                                            ),
-                                          ],
-                                        ),
-                                        child: Center(
-                                          child: Icon(
-                                            Icons.close,
-                                            size: 16.sp,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                              SizedBox(height: 26.h),
                             ],
                           ),
-                          SizedBox(height: 26.h),
-                        ],
-                      ),
-
-                    // 이메일 추가 버튼
-                    if (_controllers.length < MAX_EMAIL_COUNT)
-                      GestureDetector(
-                        onTap: _addEmailField,
-                        behavior: HitTestBehavior.opaque,
-                        child: Container(
-                          margin: EdgeInsets.only(bottom: 16.h),
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          decoration: BoxDecoration(
-                            color: Color(0xFFFBB279),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Center(
-                            child: Icon(
-                              Icons.add,
-                              color: Colors.white,
-                              size: 24.sp,
+                        if (_controllers.length < MAX_EMAIL_COUNT)
+                          GestureDetector(
+                            onTap: _addEmailField,
+                            behavior: HitTestBehavior.opaque,
+                            child: Container(
+                              margin: EdgeInsets.only(bottom: 16.h),
+                              padding: EdgeInsets.symmetric(vertical: 16.h),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFBB279),
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 24.sp,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                  ],
+                        SizedBox(height: 100.h),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
+          ),
 
-            // 다음 버튼
-            GestureDetector(
-              onTap:
-                  _isButtonEnabled
-                      ? () {
-                        // 이메일 저장 및 다음 화면으로 이동
-                        List<String> validEmails = [];
-                        for (var controller in _controllers) {
-                          if (controller.text.isNotEmpty &&
-                              _isValidEmail(controller.text)) {
-                            validEmails.add(controller.text);
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 40.h,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.w),
+              child: GestureDetector(
+                onTap:
+                    _isButtonEnabled
+                        ? () {
+                          List<String> validEmails = [];
+                          for (var controller in _controllers) {
+                            if (controller.text.isNotEmpty &&
+                                _isValidEmail(controller.text)) {
+                              validEmails.add(controller.text);
+                            }
+                          }
+
+                          if (validEmails.isNotEmpty) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const EmailFrequencyPage(),
+                              ),
+                            );
                           }
                         }
-
-                        if (validEmails.isNotEmpty) {
-                          emailNotifier.saveEmails(validEmails);
-                          // 이메일 발송 주기 페이지로 이동
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const EmailFrequencyPage(),
-                            ),
-                          );
-                        }
-                      }
-                      : null,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: 329.w,
-                margin: EdgeInsets.only(bottom: 88.h),
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-                decoration: BoxDecoration(
-                  color: _isButtonEnabled ? Color(0xFFFF6B00) : Colors.grey,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Center(
-                  child: Text(
-                    '다음',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                        : null,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  decoration: BoxDecoration(
+                    color:
+                        _isButtonEnabled
+                            ? const Color(0xFFFF6B00)
+                            : Colors.grey,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '다음',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

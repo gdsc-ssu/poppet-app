@@ -1,20 +1,42 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'core/router/app_router.dart';
-import 'core/theme/app_theme.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
+import 'core/storage/secure_storage_utils.dart';
+import 'core/network/dio_client.dart';
 
 void main() async {
   // Flutter 바인딩 초기화
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Firebase 초기화 (직접 초기화 방식)
+  await Firebase.initializeApp();
+
   // 카카오 SDK 초기화
   KakaoSdk.init(
-    nativeAppKey: 'c3595bb22d50be34ccb16b5c34a19b73',
-    javaScriptAppKey: '5cdba5181f32c895e85625f3a050348e', // 자바스크립트 키
+    nativeAppKey: 'a1e5cdadeae290397049e5b6c51829ca',
+    javaScriptAppKey: '2707b64775ef31cc6aeae01392466da6',
   );
+
+  // 저장된 토큰 불러와 적용
+  final token = await SecureStorageUtils.getAccessToken();
+  if (token != null) {
+    // 토큰 설정 (DioClient 내부에서 Bearer 접두사 처리)
+    await DioClient.setToken(token);
+    print('🔑 앱 시작 시 저장된 토큰이 설정되었습니다');
+  } else {
+    print('⚠️ 앱 시작 시 저장된 토큰이 없습니다');
+  }
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -30,21 +52,21 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    requestMicrophonePermission();
+    requestPermissions();
   }
 
-  Future<void> requestMicrophonePermission() async {
+  Future<void> requestPermissions() async {
     await [Permission.microphone, Permission.speech].request();
   }
 
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
+
     return ScreenUtilInit(
       designSize: const Size(393, 852),
       minTextAdapt: true,
       splitScreenMode: true,
-
       builder: (context, child) {
         return MaterialApp.router(
           title: 'Poppet',
@@ -59,52 +81,6 @@ class _MyAppState extends ConsumerState<MyApp> {
           },
         );
       },
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
