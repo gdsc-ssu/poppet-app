@@ -5,7 +5,7 @@ part 'auth_response.g.dart';
 part 'auth_response.freezed.dart';
 
 @freezed
-class AuthResponse with _$AuthResponse {
+abstract class AuthResponse with _$AuthResponse {
   const factory AuthResponse({required AccessToken accessToken}) =
       _AuthResponse;
 
@@ -14,7 +14,7 @@ class AuthResponse with _$AuthResponse {
 }
 
 @freezed
-class AccessToken with _$AccessToken {
+abstract class AccessToken with _$AccessToken {
   const factory AccessToken({required String token}) = _AccessToken;
 
   factory AccessToken.fromJson(Map<String, dynamic> json) =>

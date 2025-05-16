@@ -5,7 +5,7 @@ part 'chat_response.g.dart';
 part 'chat_response.freezed.dart';
 
 @freezed
-class ChatResponse with _$ChatResponse {
+abstract class ChatResponse with _$ChatResponse {
   const factory ChatResponse({
     required bool is_success,
     required int code,
@@ -18,7 +18,7 @@ class ChatResponse with _$ChatResponse {
 }
 
 @freezed
-class ChatItem with _$ChatItem {
+abstract class ChatItem with _$ChatItem {
   const factory ChatItem({
     required String id,
     required String content,

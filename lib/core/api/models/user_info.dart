@@ -5,7 +5,7 @@ part 'user_info.g.dart';
 part 'user_info.freezed.dart';
 
 @freezed
-class UserInfo with _$UserInfo {
+abstract class UserInfo with _$UserInfo {
   const factory UserInfo({
     required String id,
     required String name,

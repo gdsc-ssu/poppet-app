@@ -101,7 +101,7 @@ class EmailSettingViewModel extends _$EmailSettingViewModel {
         final emailRepository = ref.read(emailRepositoryProvider);
 
         // API 호출을 통해 이메일 가져오기
-        final email = await emailRepository.getUserEmail(loginInfo.name);
+        final email = await emailRepository.getUserEmail();
 
         if (email != null) {
           debugPrint('사용자 이메일: $email');
@@ -139,7 +139,7 @@ class EmailSettingViewModel extends _$EmailSettingViewModel {
       }
 
       final emailRepository = ref.read(emailRepositoryProvider);
-      final savedEmail = await emailRepository.getUserEmail(loginInfo.name);
+      final savedEmail = await emailRepository.getUserEmail();
 
       if (savedEmail != email) {
         // 이메일이 변경된 경우에만 저장

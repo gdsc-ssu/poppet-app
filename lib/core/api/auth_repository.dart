@@ -2,16 +2,15 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:pet/core/api/api_service.dart';
 import 'package:pet/core/api/models/auth_response.dart';
 import 'package:pet/core/api/models/user_info.dart';
-import 'package:pet/core/storage/app_storage.dart';
+import 'package:pet/core/storage/secure_storage_utils.dart';
 import 'package:pet/core/network/dio_client.dart';
 
 part 'auth_repository.g.dart';
 
 class AuthRepository {
   final ApiService _apiService;
-  final AppStorage _appStorage;
 
-  AuthRepository(this._apiService, this._appStorage);
+  AuthRepository(this._apiService);
 
   Future<bool> loginWithKakao(String accessToken) async {
     try {
@@ -27,15 +26,14 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
-    await _appStorage.clearAll();
+    await SecureStorageUtils.clearAll();
   }
 
-  bool get isLoggedIn => _appStorage.getToken() != null;
+  bool get isLoggedIn => SecureStorageUtils.getAccessToken() != null;
 }
 
 @riverpod
 AuthRepository authRepository(AuthRepositoryRef ref) {
   final apiService = ref.watch(apiServiceProvider);
-  final appStorage = ref.watch(appStorageProvider).value!;
-  return AuthRepository(apiService, appStorage);
+  return AuthRepository(apiService);
 }

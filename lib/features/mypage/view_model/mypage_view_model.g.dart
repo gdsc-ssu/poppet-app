@@ -12,14 +12,15 @@ String _$myPageViewModelHash() => r'188bbd2d73f15d5013e663664dd55caa2c4d203a';
 @ProviderFor(MyPageViewModel)
 final myPageViewModelProvider =
     AutoDisposeAsyncNotifierProvider<MyPageViewModel, void>.internal(
-  MyPageViewModel.new,
-  name: r'myPageViewModelProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$myPageViewModelHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      MyPageViewModel.new,
+      name: r'myPageViewModelProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$myPageViewModelHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$MyPageViewModel = AutoDisposeAsyncNotifier<void>;
 // ignore_for_file: type=lint

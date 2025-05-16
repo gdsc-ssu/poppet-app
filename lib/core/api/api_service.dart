@@ -25,7 +25,6 @@ abstract class ApiService {
   @MultiPart()
   Future<ChatResponse> createChat({
     @Part(name: 'chat') required List<MultipartFile> chat,
-    @Query('name') String? name,
   });
 
   @PATCH('/chats/{chatId}')
@@ -41,28 +40,19 @@ abstract class ApiService {
   });
 
   @GET('/emails/period')
-  Future<dynamic> getEmailPeriod({@Query('name') required String name});
+  Future<dynamic> getEmailPeriod();
 
   @PATCH('/emails/period')
-  Future<dynamic> updateEmailPeriod({
-    @Query('name') required String name,
-    @Query('period') required int period,
-  });
+  Future<dynamic> updateEmailPeriod({@Query('period') required int period});
 
   @GET('/emails')
-  Future<EmailResponse> getUserEmail({@Query('name') required String name});
+  Future<EmailResponse> getUserEmail();
 
   @DELETE('/emails/{id}')
-  Future<CommonResponse> deleteUserEmail({
-    @Query('name') required String name,
-    @Path("id") required int id,
-  });
+  Future<CommonResponse> deleteUserEmail({@Path("id") required int id});
 
   @POST('/emails')
-  Future<dynamic> addEmail({
-    @Query('name') required String name,
-    @Body() required Map<String, dynamic> data,
-  });
+  Future<dynamic> addEmail({@Body() required Map<String, dynamic> data});
 }
 
 @riverpod

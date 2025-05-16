@@ -6,16 +6,17 @@ part of 'chat_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$chatRepositoryHash() => r'3c3b8c6916c1e904091c11d73b9aa8e00ffa333c';
+String _$chatRepositoryHash() => r'fbbce8617bf7b64e14fbdc4ccd3681599c208739';
 
 /// See also [chatRepository].
 @ProviderFor(chatRepository)
 final chatRepositoryProvider = AutoDisposeProvider<ChatRepository>.internal(
   chatRepository,
   name: r'chatRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$chatRepositoryHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$chatRepositoryHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

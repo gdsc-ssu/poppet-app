@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "314287957779",
+    "project_id": "poppet-2a537",
+    "storage_bucket": "poppet-2a537.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:314287957779:android:5637e69610f4b0fb0d5ce6",
+        "android_client_info": {
+          "package_name": "com.example.pet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "314287957779-6sk2od1hjvrjt7knh4iudut64srh7mf4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pet",
+            "certificate_hash": "0e4b0ea2d76a7e614ed89dd0abbcc8124db43458"
+          }
+        },
+        {
+          "client_id": "314287957779-tr86rg1u5a053tsj4v4h8eqfuopaff16.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDB0XdnxswRxCAfNJbyHD91gTLEmc2pTkc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "314287957779-tr86rg1u5a053tsj4v4h8eqfuopaff16.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "314287957779-0m8thm5trhiitjjkutphgr2iajgelo33.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pet"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

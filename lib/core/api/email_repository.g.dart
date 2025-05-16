@@ -6,16 +6,17 @@ part of 'email_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$emailRepositoryHash() => r'a6dcaa3a85dd1c36de771f686618f85c72e2bf7c';
+String _$emailRepositoryHash() => r'2c1836dca4857ca8f9f791f030af0949683701a2';
 
 /// See also [emailRepository].
 @ProviderFor(emailRepository)
 final emailRepositoryProvider = AutoDisposeProvider<EmailRepository>.internal(
   emailRepository,
   name: r'emailRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$emailRepositoryHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$emailRepositoryHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

@@ -6,23 +6,18 @@ part of 'auth_response.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$AuthResponseImpl _$$AuthResponseImplFromJson(Map<String, dynamic> json) =>
-    _$AuthResponseImpl(
-      accessToken:
-          AccessToken.fromJson(json['accessToken'] as Map<String, dynamic>),
+_AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) =>
+    _AuthResponse(
+      accessToken: AccessToken.fromJson(
+        json['accessToken'] as Map<String, dynamic>,
+      ),
     );
 
-Map<String, dynamic> _$$AuthResponseImplToJson(_$AuthResponseImpl instance) =>
-    <String, dynamic>{
-      'accessToken': instance.accessToken,
-    };
+Map<String, dynamic> _$AuthResponseToJson(_AuthResponse instance) =>
+    <String, dynamic>{'accessToken': instance.accessToken};
 
-_$AccessTokenImpl _$$AccessTokenImplFromJson(Map<String, dynamic> json) =>
-    _$AccessTokenImpl(
-      token: json['token'] as String,
-    );
+_AccessToken _$AccessTokenFromJson(Map<String, dynamic> json) =>
+    _AccessToken(token: json['token'] as String);
 
-Map<String, dynamic> _$$AccessTokenImplToJson(_$AccessTokenImpl instance) =>
-    <String, dynamic>{
-      'token': instance.token,
-    };
+Map<String, dynamic> _$AccessTokenToJson(_AccessToken instance) =>
+    <String, dynamic>{'token': instance.token};

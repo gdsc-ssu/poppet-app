@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/scheduler.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_style.dart';
 import '../view_model/email_setting_view_model.dart';
@@ -92,7 +93,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
       }
 
       final emailRepository = ref.read(emailRepositoryProvider);
-      final emailList = await emailRepository.getUserEmail(loginInfo.name);
+      final emailList = await emailRepository.getUserEmail();
 
       debugPrint('이메일 응답 데이터: $emailList');
 
@@ -142,12 +143,16 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
       _updateButtonState();
     } catch (e) {
       debugPrint('이메일 가져오기 실패: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('이메일을 가져오는데 실패했습니다.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('이메일을 가져오는데 실패했습니다.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
 
       setState(() {
         _controllers.clear();
@@ -201,12 +206,16 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
 
       // 이전 이메일이 비어있거나 유효하지 않은 경우
       if (previousEmail.isEmpty || !_isValidEmail(previousEmail)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('먼저 유효한 이메일을 입력해주세요.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('먼저 유효한 이메일을 입력해주세요.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        });
         return;
       }
 
@@ -223,10 +232,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
         }
 
         final emailRepository = ref.read(emailRepositoryProvider);
-        final success = await emailRepository.addEmail(
-          loginInfo.name,
-          previousEmail,
-        );
+        final success = await emailRepository.addEmail(previousEmail);
 
         if (success) {
           // 성공 시 리스너 추가
@@ -240,12 +246,16 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
             _controllers.removeLast();
           });
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('이메일 추가에 실패했습니다.'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('이메일 추가에 실패했습니다.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            });
           }
         }
       } catch (e) {
@@ -254,12 +264,16 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
           _controllers.removeLast();
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('이메일 추가 중 오류가 발생했습니다.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('이메일 추가 중 오류가 발생했습니다.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          });
         }
       }
     }
@@ -272,7 +286,7 @@ class _EmailSettingPageState extends ConsumerState<EmailSettingPage> {
       final emailId = _emailIds[index];
       final response = await ref
           .read(emailRepositoryProvider)
-          .deleteUserEmail(id: emailId, name: loginInfo?.name ?? '');
+          .deleteUserEmail(id: emailId);
 
       if (_controllers.length > 1 && index >= 0) {
         setState(() {

@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:pet/core/api/api_service.dart';
-import 'package:pet/core/storage/app_storage.dart';
+import 'package:pet/core/storage/secure_storage_utils.dart';
 import 'package:pet/core/provider/login_provider.dart';
 import 'package:flutter/material.dart';
 
@@ -8,14 +8,13 @@ part 'email_repository.g.dart';
 
 class EmailRepository {
   final ApiService _apiService;
-  final AppStorage _appStorage;
 
-  EmailRepository(this._apiService, this._appStorage);
+  EmailRepository(this._apiService);
 
   /// 이메일 발송 주기 가져오기
   Future<int?> getEmailPeriod(String name) async {
     try {
-      final response = await _apiService.getEmailPeriod(name: name);
+      final response = await _apiService.getEmailPeriod();
       debugPrint('이메일 주기 응답: $response');
 
       // API 응답 형식: {"is_success": true, "code": 200, "message": "...", "data": {"period": 3}}
@@ -47,10 +46,7 @@ class EmailRepository {
   /// 이메일 발송 주기 업데이트
   Future<bool> updateEmailPeriod(String name, int period) async {
     try {
-      final response = await _apiService.updateEmailPeriod(
-        name: name,
-        period: period,
-      );
+      final response = await _apiService.updateEmailPeriod(period: period);
 
       debugPrint('이메일 주기 업데이트 응답: $response');
 
@@ -68,15 +64,15 @@ class EmailRepository {
   }
 
   /// 사용자 이메일 가져오기
-  Future<List<EmailData>?> getUserEmail(String name) async {
+  Future<List<EmailData>?> getUserEmail() async {
     try {
-      final response = await _apiService.getUserEmail(name: name);
+      final response = await _apiService.getUserEmail();
       debugPrint('사용자 이메일 응답: $response)');
 
       // API 응답 형식: {"is_success": true, "code": 200, "message": "...", "data": {"email": "user@example.com"}}
 
       // 성공 여부 확인
-      if (response.isSuccess) {
+      if (response.isSuccess && response.data != null) {
         return response.data;
       }
 
@@ -88,12 +84,9 @@ class EmailRepository {
   }
 
   /// 새 이메일 추가하기
-  Future<bool> addEmail(String name, String newEmail) async {
+  Future<bool> addEmail(String newEmail) async {
     try {
-      final response = await _apiService.addEmail(
-        name: name,
-        data: {'newEmail': newEmail},
-      );
+      final response = await _apiService.addEmail(data: {'newEmail': newEmail});
 
       debugPrint('이메일 추가 응답: $response');
 
@@ -110,12 +103,13 @@ class EmailRepository {
     }
   }
 
-  Future<bool> deleteUserEmail({required int id, required String name}) async {
+  Future<bool> deleteUserEmail({required int id}) async {
     try {
-      final response = await _apiService.deleteUserEmail(id: id, name: name);
+      final response = await _apiService.deleteUserEmail(id: id);
       debugPrint('이메일 삭제 응답: $response');
 
-      return false;
+      // API 응답 성공 여부 확인
+      return response.isSuccess;
     } catch (e) {
       debugPrint('이메일 삭제 실패: $e');
       return false;
@@ -126,8 +120,7 @@ class EmailRepository {
 @riverpod
 EmailRepository emailRepository(EmailRepositoryRef ref) {
   final apiService = ref.watch(apiServiceProvider);
-  final appStorage = ref.watch(appStorageProvider).value!;
-  return EmailRepository(apiService, appStorage);
+  return EmailRepository(apiService);
 }
 
 class EmailData {

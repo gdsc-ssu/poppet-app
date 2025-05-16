@@ -1,3 +1,4 @@
+// dart format width=80
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
@@ -9,322 +10,290 @@ part of 'auth_response.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) {
-  return _AuthResponse.fromJson(json);
-}
 
 /// @nodoc
 mixin _$AuthResponse {
-  AccessToken get accessToken => throw _privateConstructorUsedError;
+
+ AccessToken get accessToken;
+/// Create a copy of AuthResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AuthResponseCopyWith<AuthResponse> get copyWith => _$AuthResponseCopyWithImpl<AuthResponse>(this as AuthResponse, _$identity);
 
   /// Serializes this AuthResponse to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of AuthResponse
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $AuthResponseCopyWith<AuthResponse> get copyWith =>
-      throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthResponse&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,accessToken);
+
+@override
+String toString() {
+  return 'AuthResponse(accessToken: $accessToken)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $AuthResponseCopyWith<$Res> {
-  factory $AuthResponseCopyWith(
-          AuthResponse value, $Res Function(AuthResponse) then) =
-      _$AuthResponseCopyWithImpl<$Res, AuthResponse>;
-  @useResult
-  $Res call({AccessToken accessToken});
+abstract mixin class $AuthResponseCopyWith<$Res>  {
+  factory $AuthResponseCopyWith(AuthResponse value, $Res Function(AuthResponse) _then) = _$AuthResponseCopyWithImpl;
+@useResult
+$Res call({
+ AccessToken accessToken
+});
 
-  $AccessTokenCopyWith<$Res> get accessToken;
+
+$AccessTokenCopyWith<$Res> get accessToken;
+
 }
-
 /// @nodoc
-class _$AuthResponseCopyWithImpl<$Res, $Val extends AuthResponse>
+class _$AuthResponseCopyWithImpl<$Res>
     implements $AuthResponseCopyWith<$Res> {
-  _$AuthResponseCopyWithImpl(this._value, this._then);
+  _$AuthResponseCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final AuthResponse _self;
+  final $Res Function(AuthResponse) _then;
 
-  /// Create a copy of AuthResponse
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? accessToken = null,
-  }) {
-    return _then(_value.copyWith(
-      accessToken: null == accessToken
-          ? _value.accessToken
-          : accessToken // ignore: cast_nullable_to_non_nullable
-              as AccessToken,
-    ) as $Val);
-  }
-
-  /// Create a copy of AuthResponse
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $AccessTokenCopyWith<$Res> get accessToken {
-    return $AccessTokenCopyWith<$Res>(_value.accessToken, (value) {
-      return _then(_value.copyWith(accessToken: value) as $Val);
-    });
-  }
+/// Create a copy of AuthResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? accessToken = null,}) {
+  return _then(_self.copyWith(
+accessToken: null == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
+as AccessToken,
+  ));
+}
+/// Create a copy of AuthResponse
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AccessTokenCopyWith<$Res> get accessToken {
+  
+  return $AccessTokenCopyWith<$Res>(_self.accessToken, (value) {
+    return _then(_self.copyWith(accessToken: value));
+  });
+}
 }
 
-/// @nodoc
-abstract class _$$AuthResponseImplCopyWith<$Res>
-    implements $AuthResponseCopyWith<$Res> {
-  factory _$$AuthResponseImplCopyWith(
-          _$AuthResponseImpl value, $Res Function(_$AuthResponseImpl) then) =
-      __$$AuthResponseImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({AccessToken accessToken});
-
-  @override
-  $AccessTokenCopyWith<$Res> get accessToken;
-}
-
-/// @nodoc
-class __$$AuthResponseImplCopyWithImpl<$Res>
-    extends _$AuthResponseCopyWithImpl<$Res, _$AuthResponseImpl>
-    implements _$$AuthResponseImplCopyWith<$Res> {
-  __$$AuthResponseImplCopyWithImpl(
-      _$AuthResponseImpl _value, $Res Function(_$AuthResponseImpl) _then)
-      : super(_value, _then);
-
-  /// Create a copy of AuthResponse
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? accessToken = null,
-  }) {
-    return _then(_$AuthResponseImpl(
-      accessToken: null == accessToken
-          ? _value.accessToken
-          : accessToken // ignore: cast_nullable_to_non_nullable
-              as AccessToken,
-    ));
-  }
-}
 
 /// @nodoc
 @JsonSerializable()
-class _$AuthResponseImpl implements _AuthResponse {
-  const _$AuthResponseImpl({required this.accessToken});
 
-  factory _$AuthResponseImpl.fromJson(Map<String, dynamic> json) =>
-      _$$AuthResponseImplFromJson(json);
+class _AuthResponse implements AuthResponse {
+  const _AuthResponse({required this.accessToken});
+  factory _AuthResponse.fromJson(Map<String, dynamic> json) => _$AuthResponseFromJson(json);
 
-  @override
-  final AccessToken accessToken;
+@override final  AccessToken accessToken;
 
-  @override
-  String toString() {
-    return 'AuthResponse(accessToken: $accessToken)';
-  }
+/// Create a copy of AuthResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AuthResponseCopyWith<_AuthResponse> get copyWith => __$AuthResponseCopyWithImpl<_AuthResponse>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$AuthResponseImpl &&
-            (identical(other.accessToken, accessToken) ||
-                other.accessToken == accessToken));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(runtimeType, accessToken);
-
-  /// Create a copy of AuthResponse
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$AuthResponseImplCopyWith<_$AuthResponseImpl> get copyWith =>
-      __$$AuthResponseImplCopyWithImpl<_$AuthResponseImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$AuthResponseImplToJson(
-      this,
-    );
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$AuthResponseToJson(this, );
 }
 
-abstract class _AuthResponse implements AuthResponse {
-  const factory _AuthResponse({required final AccessToken accessToken}) =
-      _$AuthResponseImpl;
-
-  factory _AuthResponse.fromJson(Map<String, dynamic> json) =
-      _$AuthResponseImpl.fromJson;
-
-  @override
-  AccessToken get accessToken;
-
-  /// Create a copy of AuthResponse
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AuthResponseImplCopyWith<_$AuthResponseImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthResponse&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken));
 }
 
-AccessToken _$AccessTokenFromJson(Map<String, dynamic> json) {
-  return _AccessToken.fromJson(json);
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,accessToken);
+
+@override
+String toString() {
+  return 'AuthResponse(accessToken: $accessToken)';
 }
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AuthResponseCopyWith<$Res> implements $AuthResponseCopyWith<$Res> {
+  factory _$AuthResponseCopyWith(_AuthResponse value, $Res Function(_AuthResponse) _then) = __$AuthResponseCopyWithImpl;
+@override @useResult
+$Res call({
+ AccessToken accessToken
+});
+
+
+@override $AccessTokenCopyWith<$Res> get accessToken;
+
+}
+/// @nodoc
+class __$AuthResponseCopyWithImpl<$Res>
+    implements _$AuthResponseCopyWith<$Res> {
+  __$AuthResponseCopyWithImpl(this._self, this._then);
+
+  final _AuthResponse _self;
+  final $Res Function(_AuthResponse) _then;
+
+/// Create a copy of AuthResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? accessToken = null,}) {
+  return _then(_AuthResponse(
+accessToken: null == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
+as AccessToken,
+  ));
+}
+
+/// Create a copy of AuthResponse
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AccessTokenCopyWith<$Res> get accessToken {
+  
+  return $AccessTokenCopyWith<$Res>(_self.accessToken, (value) {
+    return _then(_self.copyWith(accessToken: value));
+  });
+}
+}
+
 
 /// @nodoc
 mixin _$AccessToken {
-  String get token => throw _privateConstructorUsedError;
+
+ String get token;
+/// Create a copy of AccessToken
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AccessTokenCopyWith<AccessToken> get copyWith => _$AccessTokenCopyWithImpl<AccessToken>(this as AccessToken, _$identity);
 
   /// Serializes this AccessToken to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of AccessToken
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $AccessTokenCopyWith<AccessToken> get copyWith =>
-      throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AccessToken&&(identical(other.token, token) || other.token == token));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,token);
+
+@override
+String toString() {
+  return 'AccessToken(token: $token)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $AccessTokenCopyWith<$Res> {
-  factory $AccessTokenCopyWith(
-          AccessToken value, $Res Function(AccessToken) then) =
-      _$AccessTokenCopyWithImpl<$Res, AccessToken>;
-  @useResult
-  $Res call({String token});
-}
+abstract mixin class $AccessTokenCopyWith<$Res>  {
+  factory $AccessTokenCopyWith(AccessToken value, $Res Function(AccessToken) _then) = _$AccessTokenCopyWithImpl;
+@useResult
+$Res call({
+ String token
+});
 
+
+
+
+}
 /// @nodoc
-class _$AccessTokenCopyWithImpl<$Res, $Val extends AccessToken>
+class _$AccessTokenCopyWithImpl<$Res>
     implements $AccessTokenCopyWith<$Res> {
-  _$AccessTokenCopyWithImpl(this._value, this._then);
+  _$AccessTokenCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final AccessToken _self;
+  final $Res Function(AccessToken) _then;
 
-  /// Create a copy of AccessToken
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? token = null,
-  }) {
-    return _then(_value.copyWith(
-      token: null == token
-          ? _value.token
-          : token // ignore: cast_nullable_to_non_nullable
-              as String,
-    ) as $Val);
-  }
+/// Create a copy of AccessToken
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? token = null,}) {
+  return _then(_self.copyWith(
+token: null == token ? _self.token : token // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-abstract class _$$AccessTokenImplCopyWith<$Res>
-    implements $AccessTokenCopyWith<$Res> {
-  factory _$$AccessTokenImplCopyWith(
-          _$AccessTokenImpl value, $Res Function(_$AccessTokenImpl) then) =
-      __$$AccessTokenImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String token});
 }
 
-/// @nodoc
-class __$$AccessTokenImplCopyWithImpl<$Res>
-    extends _$AccessTokenCopyWithImpl<$Res, _$AccessTokenImpl>
-    implements _$$AccessTokenImplCopyWith<$Res> {
-  __$$AccessTokenImplCopyWithImpl(
-      _$AccessTokenImpl _value, $Res Function(_$AccessTokenImpl) _then)
-      : super(_value, _then);
-
-  /// Create a copy of AccessToken
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? token = null,
-  }) {
-    return _then(_$AccessTokenImpl(
-      token: null == token
-          ? _value.token
-          : token // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
-  }
-}
 
 /// @nodoc
 @JsonSerializable()
-class _$AccessTokenImpl implements _AccessToken {
-  const _$AccessTokenImpl({required this.token});
 
-  factory _$AccessTokenImpl.fromJson(Map<String, dynamic> json) =>
-      _$$AccessTokenImplFromJson(json);
+class _AccessToken implements AccessToken {
+  const _AccessToken({required this.token});
+  factory _AccessToken.fromJson(Map<String, dynamic> json) => _$AccessTokenFromJson(json);
 
-  @override
-  final String token;
+@override final  String token;
 
-  @override
-  String toString() {
-    return 'AccessToken(token: $token)';
-  }
+/// Create a copy of AccessToken
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AccessTokenCopyWith<_AccessToken> get copyWith => __$AccessTokenCopyWithImpl<_AccessToken>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$AccessTokenImpl &&
-            (identical(other.token, token) || other.token == token));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(runtimeType, token);
-
-  /// Create a copy of AccessToken
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$AccessTokenImplCopyWith<_$AccessTokenImpl> get copyWith =>
-      __$$AccessTokenImplCopyWithImpl<_$AccessTokenImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$AccessTokenImplToJson(
-      this,
-    );
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$AccessTokenToJson(this, );
 }
 
-abstract class _AccessToken implements AccessToken {
-  const factory _AccessToken({required final String token}) = _$AccessTokenImpl;
-
-  factory _AccessToken.fromJson(Map<String, dynamic> json) =
-      _$AccessTokenImpl.fromJson;
-
-  @override
-  String get token;
-
-  /// Create a copy of AccessToken
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AccessTokenImplCopyWith<_$AccessTokenImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AccessToken&&(identical(other.token, token) || other.token == token));
 }
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,token);
+
+@override
+String toString() {
+  return 'AccessToken(token: $token)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AccessTokenCopyWith<$Res> implements $AccessTokenCopyWith<$Res> {
+  factory _$AccessTokenCopyWith(_AccessToken value, $Res Function(_AccessToken) _then) = __$AccessTokenCopyWithImpl;
+@override @useResult
+$Res call({
+ String token
+});
+
+
+
+
+}
+/// @nodoc
+class __$AccessTokenCopyWithImpl<$Res>
+    implements _$AccessTokenCopyWith<$Res> {
+  __$AccessTokenCopyWithImpl(this._self, this._then);
+
+  final _AccessToken _self;
+  final $Res Function(_AccessToken) _then;
+
+/// Create a copy of AccessToken
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? token = null,}) {
+  return _then(_AccessToken(
+token: null == token ? _self.token : token // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+// dart format on
