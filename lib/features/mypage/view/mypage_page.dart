@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_style.dart';
 import '../../../core/provider/login_provider.dart';
+import '../../auth/provider/auth_provider.dart';
 import 'privacy_policy_page.dart';
 import 'terms_of_service_page.dart';
 import 'confirmation_popup.dart';
@@ -125,7 +126,12 @@ class MyPagePage extends ConsumerWidget {
                         title: '로그아웃',
                         message: '정말 로그아웃하시겠습니까?\n언제든지 다시 로그인할 수 있어요.',
                         confirmButtonText: '로그아웃',
-                        onConfirm: () => context.go('/'),
+                        onConfirm: () async {
+                          await ref.read(authStateProvider.notifier).logout();
+                          if (context.mounted) {
+                            context.go('/');
+                          }
+                        },
                       ),
                 );
               },
@@ -142,10 +148,13 @@ class MyPagePage extends ConsumerWidget {
                         message:
                             '정말 탈퇴하시겠습니까?\n탈퇴 시 계정은 삭제되며,\n데이터는 복구되지 않습니다.',
                         confirmButtonText: '회원탈퇴',
-                        onConfirm: () {
+                        onConfirm: () async {
                           // TODO: 회원탈퇴 처리 로직 구현
                           print('회원탈퇴 처리');
-                          context.go('/');
+                          await ref.read(authStateProvider.notifier).logout();
+                          if (context.mounted) {
+                            context.go('/');
+                          }
                         },
                       ),
                 );

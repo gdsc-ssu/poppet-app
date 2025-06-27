@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../auth/provider/auth_provider.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -32,12 +34,31 @@ class _SplashScreenState extends State<SplashScreen>
     // 애니메이션 시작
     _controller.forward();
 
-    // 스플래시 화면 지속 시간 후 다음 화면으로 이동
-    Future.delayed(const Duration(milliseconds: 2500), () {
-      if (mounted) {
-        context.go('/');
-      }
-    });
+    // 자동 로그인 체크 및 화면 이동
+    _checkAutoLoginAndNavigate();
+  }
+
+  Future<void> _checkAutoLoginAndNavigate() async {
+    // 애니메이션이 완료될 때까지 기다림
+    await _controller.forward();
+
+    // 최소 스플래시 표시 시간 보장
+    await Future.delayed(const Duration(milliseconds: 2500));
+
+    if (!mounted) return;
+
+    // 자동 로그인 체크
+    await ref.read(authStateProvider.notifier).checkAutoLogin();
+
+    if (!mounted) return;
+
+    // 인증 상태에 따라 화면 이동
+    final authState = ref.read(authStateProvider);
+    if (authState.isAuthenticated) {
+      context.go('/home');
+    } else {
+      context.go('/');
+    }
   }
 
   @override

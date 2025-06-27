@@ -42,6 +42,14 @@ class SecureStorageUtils {
     return await _storage.read(key: _userIdKey);
   }
 
+  static Future<void> setUserName(String userName) async {
+    await _storage.write(key: 'user_name', value: userName);
+  }
+
+  static Future<String?> getUserName() async {
+    return await _storage.read(key: 'user_name');
+  }
+
   static Future<void> clearAll() async {
     await _storage.deleteAll();
     debugPrint('🧹 모든 SecureStorage 데이터가 삭제되었습니다.');

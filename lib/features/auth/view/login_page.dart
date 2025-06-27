@@ -48,51 +48,51 @@ class LoginPage extends ConsumerWidget {
                 ),
               ),
               const Spacer(),
-              InkWell(
-                onTap: () {
-                  if (!authState.isGoogleLoading) {
-                    ref
-                        .read(authStateProvider.notifier)
-                        .signInWithGoogle(context);
-                  }
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 54.h,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF2F2F2),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child:
-                      authState.isGoogleLoading
-                          ? const Center(
-                            child: CircularProgressIndicator(
-                              color: Color(0xFF191919),
-                            ),
-                          )
-                          : Row(
-                            children: [
-                              SizedBox(width: 23.w),
-                              Image.asset(
-                                'assets/images/googleLogo.png',
-                                width: 24.w,
-                                height: 24.w,
-                              ),
-                              Expanded(
-                                child: Text(
-                                  'Google 계정으로 로그인하기',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 23.w),
-                            ],
-                          ),
-                ),
-              ),
+              // InkWell(
+              //   onTap: () {
+              //     if (!authState.isGoogleLoading) {
+              //       ref
+              //           .read(authStateProvider.notifier)
+              //           .signInWithGoogle(context);
+              //     }
+              //   },
+              //   child: Container(
+              //     width: double.infinity,
+              //     height: 54.h,
+              //     decoration: BoxDecoration(
+              //       color: const Color(0xFFF2F2F2),
+              //       borderRadius: BorderRadius.circular(12.r),
+              //     ),
+              //     child:
+              //         authState.isGoogleLoading
+              //             ? const Center(
+              //               child: CircularProgressIndicator(
+              //                 color: Color(0xFF191919),
+              //               ),
+              //             )
+              //             : Row(
+              //               children: [
+              //                 SizedBox(width: 23.w),
+              //                 Image.asset(
+              //                   'assets/images/googleLogo.png',
+              //                   width: 24.w,
+              //                   height: 24.w,
+              //                 ),
+              //                 Expanded(
+              //                   child: Text(
+              //                     'Google 계정으로 로그인하기',
+              //                     textAlign: TextAlign.center,
+              //                     style: TextStyle(
+              //                       fontSize: 16.sp,
+              //                       fontWeight: FontWeight.w600,
+              //                     ),
+              //                   ),
+              //                 ),
+              //                 SizedBox(width: 23.w),
+              //               ],
+              //             ),
+              //   ),
+              // ),
               Container(height: 10.h),
               InkWell(
                 onTap: () {
