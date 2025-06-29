@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_style.dart';
-import '../../../core/utils/audio_utils.dart';
+
 import '../view_model/home_view_model.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:lottie/lottie.dart';
 
-// 오디오 재생 중인지 관리하는 Provider
+// 오디오 재생 중인지 관리하는 Providerr
 final isPlayingAudioProvider = StateProvider<bool>((ref) => false);
 
 class HomePage extends ConsumerWidget {
@@ -19,41 +17,25 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final viewModel = ref.watch(homeViewModelProvider.notifier);
-    final recordingState = ref.watch(homeViewModelProvider);
-    final recordState = viewModel.recordingState;
-    final isRecording = viewModel.isRecording;
-    final isCompleted = viewModel.isCompleted;
-    final isUploading = viewModel.isUploading;
-    final isUploaded = viewModel.isUploaded;
+    final recordState = ref.watch(recordingStateProvider);
     final isPlayingAudio = ref.watch(isPlayingAudioProvider);
 
-    // 상태에 따른 텍스트 설정
-    String statusText = '';
-    if (isPlayingAudio) {
-      statusText = '뽀삐가 대답하는 중이에요';
-    } else if (recordState == RecordingState.initial) {
-      statusText = '마이크 버튼을 누르고\n대화를 나눠보세요.';
-    } else if (recordState == RecordingState.recording) {
-      statusText = '대화를 그만하고 싶다면\n중지 버튼을 눌러주세요';
-    } else if (recordState == RecordingState.uploading) {
-      statusText = '녹음 파일을 서버로\n전송하는 중이에요';
-    } else {
-      statusText = '뽀삐가 대답을\n생각하는 중이에요';
-    }
+    // 텍스트 상태
+    String statusText = switch (recordState) {
+      RecordingState.uploaded => '뽀삐가 대답하는 중이에요',
+      RecordingState.recording => '대화를 그만하고 싶다면\n중지 버튼을 눌러주세요',
+      RecordingState.uploading => '뽀삐가 대답을\n생각하는 중이에요',
+      RecordingState.initial => '마이크 버튼을 누르고\n대화를 나눠보세요.',
+      _ => '대기 중...',
+    };
+    
 
-    // 상태에 따른 이미지 설정
-    String imagePath = '';
-    if (isPlayingAudio) {
-      imagePath = 'assets/images/basicpopet.png'; // 오디오 재생 중 이미지
-    } else if (recordState == RecordingState.initial) {
-      imagePath = 'assets/images/basicpopet.png';
-    } else if (recordState == RecordingState.recording) {
-      imagePath = 'assets/images/listenPoppet.png';
-    } else if (recordState == RecordingState.uploading) {
-      imagePath = 'assets/images/poppet2.png';
-    } else {
-      imagePath = 'assets/images/poppet2.png';
-    }
+    // 이미지 상태
+    String imagePath = switch (recordState) {
+      RecordingState.recording => 'assets/images/listenPoppet.png',
+      RecordingState.uploading => 'assets/images/poppet2.png',
+      _ => 'assets/images/basicpopet.png',
+    };
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -61,7 +43,7 @@ class HomePage extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: SizedBox(
-          width: 120.w, // 적절한 크기 설정
+          width: 120.w,
           height: 30.h,
           child: Image.asset('assets/images/splash/PoppetText.png'),
         ),
@@ -72,9 +54,7 @@ class HomePage extends ConsumerWidget {
               width: 40.w,
               height: 40.h,
             ),
-            onPressed: () {
-              context.push('/mypage');
-            },
+            onPressed: () => context.push('/mypage'),
           ),
           SizedBox(width: 16.w),
         ],
@@ -84,58 +64,67 @@ class HomePage extends ConsumerWidget {
         children: [
           Column(
             children: [
-              // 상단 텍스트 영역
+              // 텍스트 영역
               Container(
                 alignment: Alignment.topLeft,
                 padding: EdgeInsets.only(top: 34.h, left: 32.w),
                 child: Text(statusText, style: AppTextStyle.siwoo_32_regular),
               ),
-              isCompleted || isRecording || isUploading || isUploaded
-                  ? SizedBox()
-                  : Container(margin: EdgeInsets.only(top: 30.h)),
-              isRecording
-                  ? Container(margin: EdgeInsets.only(top: 15.h))
-                  : SizedBox(),
-              isPlayingAudio
-                  ? Container(margin: EdgeInsets.only(top: 75.h))
-                  : SizedBox(),
-              Expanded(
-                child: Stack(
-                  alignment: Alignment.topCenter,
-                  children: [
-                    // 캐릭터 이미지
-                    Image.asset(imagePath, width: 366.w),
-                  ],
-                ),
-              ),
 
+              SizedBox(height: 30.h),
+              (recordState == RecordingState.uploaded )
+                ?  Expanded(
+                
+                child: Container(
+                  
+                  margin: EdgeInsets.only(bottom: 0.h),
+                  child: Image.asset(imagePath, width: 366.w)),
+              )
+                :  Expanded(
+                
+                child: Container(
+                  
+                  margin: EdgeInsets.only(bottom: 75.h),
+                  child: Image.asset(imagePath, width: 366.w)),
+              ),
+          
+             
+               (recordState == RecordingState.recording )
+                ? Container(margin: EdgeInsets.only(top: 20.h))
+                : const SizedBox(),
+              (recordState == RecordingState.uploaded )
+                ? Container(margin: EdgeInsets.only(top: 40.h))
+                : const SizedBox(),
+          
+          
+               
+
+
+              // 배경 데코
               Container(
                 width: 393.w,
                 height: 160.h,
                 child: Stack(
                   children: [
-                    // 타원 배경 (겹침 없음)
                     Positioned(
                       left: 0,
                       top: 0,
                       child: Container(
                         width: 393.w,
                         height: 150.h,
-                        decoration: ShapeDecoration(
-                          color: Color(0xFFfbb279), // 동일한 살구색
+                        decoration: const ShapeDecoration(
+                          color: Color(0xFFfbb279),
                           shape: OvalBorder(),
                         ),
                       ),
                     ),
-
-                    // 하단 직사각형 부분 (겹침 없이 따로 적용)
                     Positioned(
                       left: 0,
-                      top: 80, // 적절한 위치 조정
+                      top: 80,
                       child: Container(
                         width: 393.w,
-                        height: 200.h, // 겹치는 부분을 제거하도록 조정
-                        color: Color(0xFFfbb279), // 동일한 색상
+                        height: 200.h,
+                        color: const Color(0xFFfbb279),
                       ),
                     ),
                   ],
@@ -144,16 +133,15 @@ class HomePage extends ConsumerWidget {
             ],
           ),
 
-          // 녹음 버튼 - 최상단에 위치
+          // 버튼 위치
           Positioned(
             top: 500.sp,
             left: 0,
             right: 0,
             child: Center(
-              child:
-                  isPlayingAudio
-                      ? _buildPlayingButton(viewModel)
-                      : _buildButton(recordState, viewModel),
+              child: isPlayingAudio
+                  ? _buildPlayingButton()
+                  : _buildButton(recordState, viewModel),
             ),
           ),
         ],
@@ -161,47 +149,18 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  // 상태에 따른 버튼 위젯 생성
+  /// 녹음 상태에 따라 버튼 렌더링
   Widget _buildButton(RecordingState state, HomeViewModel viewModel) {
     switch (state) {
       case RecordingState.initial:
-        // 초기 상태 - 마이크 버튼 (기존 코드 사용)
-        return Container(
-          height: 157.h,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white,
-            border: Border.all(color: AppColors.primary, width: 2.w),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                spreadRadius: 0,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => viewModel.toggleRecording(),
-              customBorder: CircleBorder(),
-              child: Center(
-                child: Image.asset(
-                  'assets/images/microphone.png',
-                  width: 61.w,
-                  height: 86.h,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ),
+        return _buildMicButton(
+          iconPath: 'assets/images/microphone.png',
+          iconColor: AppColors.primary,
+          onTap: viewModel.toggleRecording,
         );
-
       case RecordingState.recording:
-        // 녹음 중 - 일시정지 버튼
         return GestureDetector(
-          onTap: () => viewModel.toggleRecording(),
+          onTap: viewModel.toggleRecording,
           child: Container(
             width: 157.w,
             height: 157.h,
@@ -212,13 +171,10 @@ class HomePage extends ConsumerWidget {
             child: Icon(Icons.pause, color: Colors.white, size: 70.sp),
           ),
         );
-
       case RecordingState.uploading:
-        // 업로드 중 - 로딩 인디케이터
-        return Container(
+        return SizedBox(
           width: 157.w,
           height: 157.h,
-
           child: Lottie.asset(
             'assets/images/flow2.json',
             width: 157.w,
@@ -226,78 +182,38 @@ class HomePage extends ConsumerWidget {
             fit: BoxFit.cover,
           ),
         );
-
       case RecordingState.uploaded:
-        // 업로드 완료 - 회색 마이크 버튼
-        return Container(
-          height: 157.h,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white,
-            border: Border.all(color: AppColors.primary, width: 2.w),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                spreadRadius: 0,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => viewModel.toggleRecording(),
-              customBorder: CircleBorder(),
-              child: Center(
-                child: Image.asset(
-                  'assets/images/microphone.png',
-                  width: 61.w,
-                  height: 86.h,
-                  color: AppColors.grey,
-                ),
-              ),
-            ),
-          ),
+        return _buildMicButton(
+          iconPath: 'assets/images/microphone.png',
+          iconColor: AppColors.grey,
+          onTap: null,
         );
-
       case RecordingState.completed:
       default:
-        // 녹음 완료 - 점 세 개 버튼
-        return Container(
-          width: 157.w,
-          height: 157.h,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white,
-            border: Border.all(color: AppColors.primary, width: 2.w),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                spreadRadius: 0,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => viewModel.toggleRecording(),
-              customBorder: CircleBorder(),
-              child: Icon(
-                Icons.more_horiz,
-                color: AppColors.primary,
-                size: 70.sp,
-              ),
-            ),
-          ),
+        return _buildMicButton(
+          iconData: Icons.more_horiz,
+          iconColor: AppColors.primary,
+          onTap: viewModel.toggleRecording,
         );
     }
   }
 
-  // 오디오 재생 중일 때 표시되는 버튼
-  Widget _buildPlayingButton(HomeViewModel viewModel) {
+  /// 오디오 재생 중일 때 버튼
+  Widget _buildPlayingButton() {
+    return _buildMicButton(
+      iconPath: 'assets/images/greymic.png',
+      iconColor: AppColors.grey,
+      onTap: () {},
+    );
+  }
+
+  /// 공통 버튼 위젯
+  Widget _buildMicButton({
+    String? iconPath,
+    IconData? iconData,
+    required Color iconColor,
+    VoidCallback? onTap,
+  }) {
     return Container(
       height: 157.h,
       decoration: BoxDecoration(
@@ -309,22 +225,19 @@ class HomePage extends ConsumerWidget {
             color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             spreadRadius: 0,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => viewModel.isCompleted,
-          customBorder: CircleBorder(),
+          onTap: onTap,
+          customBorder: const CircleBorder(),
           child: Center(
-            child: Image.asset(
-              'assets/images/greymic.png',
-              width: 61.w,
-              height: 86.h,
-              color: AppColors.grey,
-            ),
+            child: iconPath != null
+                ? Image.asset(iconPath, width: 61.w, height: 86.h, color: iconColor)
+                : Icon(iconData, color: iconColor, size: 70.sp),
           ),
         ),
       ),

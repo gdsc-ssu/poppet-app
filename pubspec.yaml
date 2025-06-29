@@ -21,9 +21,9 @@ version: 1.0.0+1
 flutter_launcher_icons:
   android: true # 안드로이드 플랫폼에 런처 아이콘 적용 여부
   ios: true # iOS 플랫폼에 런처 아이콘 적용 여부
-  image_path: "assets/images/splash/PoppetLogo.png" # 런처 아이콘으로 사용할 이미지 경로
+  image_path: "assets/images/PoppetLogo.png" # 런처 아이콘으로 사용할 이미지 경로
   adaptive_icon_background: "#FFF9F2" # 안드로이드 적응형 아이콘의 배경색 (크림색)
-  adaptive_icon_foreground: "assets/images/splash/PoppetLogo.png" # 안드로이드 적응형 아이콘의 전경 이미지 경로
+  adaptive_icon_foreground: "assets/images/PoppetLogo.png" # 안드로이드 적응형 아이콘의 전경 이미지 경로
   min_sdk_android: 21 # 안드로이드 최소 SDK 버전 (API 21(Android 5.0) 이상)
   background_color: "#FFF9F2" # 안드로이드 적응형 아이콘의 배경색 (크림색)
 environment:
@@ -129,6 +129,7 @@ flutter:
     - assets/images/mypage.png
     - assets/images/greymic.png
     - assets/images/googleLogo.png
+    - assets/images/PoppetLogo.png
     - assets/images/splash/ # 스플래시 디렉토리의 모든 파일 포함
 
   # To add assets to your application, add an assets section, like this:
