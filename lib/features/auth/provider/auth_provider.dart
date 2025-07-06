@@ -14,6 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart' hide UserInfo;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
 
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 class AuthNotifier extends StateNotifier<AuthState> {
   final Ref _ref;
   final ApiService _apiService;
@@ -105,6 +106,30 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     }
   }
+ Future<void> signInWithApple(BuildContext context) async {
+  state = state.copyWith(isAppleLoading: true); // 로딩 표시
+
+  try {
+    final credential = await SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+    );
+
+    // 이 credential.userIdentifier 등을 서버로 전송하여 사용자 인증 처리
+    String userIdentifier =  credential.identityToken!;
+    print('애플 로그인 성공: ${credential.identityToken}');
+    final authResponse = await ApiService(
+        DioClient.dio,
+      ).loginWithApple({'accessToken': userIdentifier});
+    print(authResponse);
+    state = AuthState.unauthenticated();
+  } catch (e) {
+    print('애플 로그인 실패: $e');
+    state = state.copyWith(isAppleLoading: false);
+  }
+}
 
   Future<void> signInWithGoogle(BuildContext context) async {
     state = AuthState.googleLoading();
@@ -201,22 +226,25 @@ class AuthState {
   final bool isAuthenticated;
   final bool isKakaoLoading;
   final bool isGoogleLoading;
+  final bool isAppleLoading;
   final User? user;
 
   AuthState({
     required this.isAuthenticated,
     required this.isKakaoLoading,
     required this.isGoogleLoading,
+    required this.isAppleLoading,
     this.user,
   });
 
-  bool get isLoading => isKakaoLoading || isGoogleLoading;
+  bool get isLoading => isKakaoLoading || isGoogleLoading || isAppleLoading;
 
   factory AuthState.unauthenticated() {
     return AuthState(
       isAuthenticated: false,
       isKakaoLoading: false,
       isGoogleLoading: false,
+      isAppleLoading: false,
     );
   }
 
@@ -225,6 +253,7 @@ class AuthState {
       isAuthenticated: true,
       isKakaoLoading: false,
       isGoogleLoading: false,
+      isAppleLoading: false,
       user: user,
     );
   }
@@ -234,6 +263,7 @@ class AuthState {
       isAuthenticated: false,
       isKakaoLoading: true,
       isGoogleLoading: false,
+      isAppleLoading: false,
     );
   }
 
@@ -242,6 +272,16 @@ class AuthState {
       isAuthenticated: false,
       isKakaoLoading: false,
       isGoogleLoading: true,
+      isAppleLoading: false,
+    );
+  }
+
+  factory AuthState.appleLoading() {
+    return AuthState(
+      isAuthenticated: false,
+      isKakaoLoading: false,
+      isGoogleLoading: false,
+      isAppleLoading: true,
     );
   }
 
@@ -250,11 +290,28 @@ class AuthState {
       isAuthenticated: false,
       isKakaoLoading: false,
       isGoogleLoading: false,
+      isAppleLoading: false,
+    );
+  }
+
+  AuthState copyWith({
+    bool? isAuthenticated,
+    bool? isKakaoLoading,
+    bool? isGoogleLoading,
+    bool? isAppleLoading,
+    User? user,
+  }) {
+    return AuthState(
+      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      isKakaoLoading: isKakaoLoading ?? this.isKakaoLoading,
+      isGoogleLoading: isGoogleLoading ?? this.isGoogleLoading,
+      isAppleLoading: isAppleLoading ?? this.isAppleLoading,
+      user: user ?? this.user,
     );
   }
 }
 
-// Add the missing provider
+// ✅ StateNotifierProvider
 final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final apiService = ref.watch(apiServiceProvider);
   return AuthNotifier(ref, apiService);

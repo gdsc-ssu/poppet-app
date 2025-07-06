@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../provider/auth_provider.dart';
 
 class LoginPage extends ConsumerWidget {
@@ -93,6 +94,49 @@ class LoginPage extends ConsumerWidget {
               //             ),
               //   ),
               // ),
+              InkWell(
+                onTap: () {
+                  if (!authState.isAppleLoading) {
+                    ref
+                        .read(authStateProvider.notifier)
+                        .signInWithApple(context);
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 54.h,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black, width: 1),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child:
+                      authState.isAppleLoading
+                          ? const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.black,
+                            ),
+                          )
+                          : Row(
+                            children: [
+                              SizedBox(width: 23.w),
+                              Icon(Icons.apple, color: Colors.black),
+                              Expanded(
+                                child: Text(
+                                  'Apple로 로그인',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 23.w),
+                            ],
+                          ),
+                ),
+              ),
               Container(height: 10.h),
               InkWell(
                 onTap: () {
@@ -127,7 +171,7 @@ class LoginPage extends ConsumerWidget {
                               ),
                               Expanded(
                                 child: Text(
-                                  '카카오로 로그인하기',
+                                  '카카오톡으로 로그인하기',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 16.sp,

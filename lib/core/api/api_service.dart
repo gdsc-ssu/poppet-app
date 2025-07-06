@@ -17,6 +17,9 @@ abstract class ApiService {
   Future<AuthResponse> loginWithKakao(@Body() Map<String, String> loginData);
   @POST('/auth/login/google')
   Future<AuthResponse> loginWithGoogle(@Body() Map<String, String> loginData);
+    @POST('/auth/login/apple/mobile')
+  Future<AuthResponse> loginWithApple(@Body() Map<String, String> loginData);
+
 
   @GET('/user/me')
   Future<UserInfo> getUserInfo();
