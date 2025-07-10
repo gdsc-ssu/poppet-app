@@ -9,7 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:flutter/services.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/storage/secure_storage_utils.dart';
@@ -37,7 +37,9 @@ void main() async {
   } else {
     print('⚠️ 앱 시작 시 저장된 토큰이 없습니다');
   }
-
+    await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   runApp(const ProviderScope(child: MyApp()));
 }
 
