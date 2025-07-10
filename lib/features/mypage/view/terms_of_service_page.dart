@@ -10,7 +10,7 @@ class TermsOfServiceContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 32.sp),
+      padding: EdgeInsets.symmetric(horizontal: 32.sp, vertical: 28.sp),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

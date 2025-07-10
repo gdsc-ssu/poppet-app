@@ -10,9 +10,10 @@ class PrivacyPolicyContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 32.sp),
+      padding: EdgeInsets.symmetric(horizontal: 32.sp, vertical: 28.sp),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        
         children: [
           Text('제1조 개인정보의 처리목적', style: AppTextStyle.pretendard_14_regular),
           SizedBox(height: 16.h),

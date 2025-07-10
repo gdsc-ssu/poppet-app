@@ -87,7 +87,9 @@ class HomePage extends ConsumerWidget {
                   margin: EdgeInsets.only(bottom: 75.h),
                   child: Image.asset(imagePath, width: 366.w)),
               ),
-          
+               (recordState == RecordingState.uploading)
+                ? Container(margin: EdgeInsets.only(bottom: 20.h))
+                : const SizedBox(),
              
                (recordState == RecordingState.recording )
                 ? Container(margin: EdgeInsets.only(top: 20.h))

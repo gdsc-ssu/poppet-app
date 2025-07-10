@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -5,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../provider/auth_provider.dart';
+import '../../mypage/view/privacy_policy_page.dart';
+import '../../mypage/view/terms_of_service_page.dart';
 
 class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});
@@ -94,49 +97,51 @@ class LoginPage extends ConsumerWidget {
               //             ),
               //   ),
               // ),
-              InkWell(
-                onTap: () {
-                  if (!authState.isAppleLoading) {
-                    ref
-                        .read(authStateProvider.notifier)
-                        .signInWithApple(context);
-                  }
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 54.h,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black, width: 1),
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child:
-                      authState.isAppleLoading
-                          ? const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.black,
-                            ),
-                          )
-                          : Row(
-                            children: [
-                              SizedBox(width: 23.w),
-                              Icon(Icons.apple, color: Colors.black),
-                              Expanded(
-                                child: Text(
-                                  'Apple로 로그인',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
+              if (Platform.isIOS)
+                InkWell(
+                  onTap: () {
+                    if (!authState.isAppleLoading) {
+                      ref
+                          .read(authStateProvider.notifier)
+                          .signInWithApple(context);
+                    }
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 54.h,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black, width: 1),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child:
+                        authState.isAppleLoading
+                            ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.black,
+                              ),
+                            )
+                            : Row(
+                              children: [
+                                SizedBox(width: 23.w),
+                                Icon(Icons.apple, color: Colors.black),
+                                Expanded(
+                                  child: Text(
+                                    'Apple로 로그인',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              SizedBox(width: 23.w),
-                            ],
-                          ),
+                                SizedBox(width: 23.w),
+                              ],
+                            ),
+                  ),
                 ),
-              ),
+
               Container(height: 10.h),
               InkWell(
                 onTap: () {
@@ -184,7 +189,54 @@ class LoginPage extends ConsumerWidget {
                           ),
                 ),
               ),
-              SizedBox(height: 78.h),
+
+              SizedBox(height: 34.h),
+              Center(
+                child: RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: const Color(0xFF9A9A9A),
+                    ),
+                    children: [
+                      const TextSpan(text: '로그인 시 '),
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: GestureDetector(
+                          onTap: () => showTermsOfService(context),
+                          child: Text(
+                            '이용약관',
+                            style: TextStyle(
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12.sp,
+                              color: const Color(0xFF9A9A9A),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const TextSpan(text: ' 및 '),
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: GestureDetector(
+                          onTap: () => showPrivacyPolicy(context),
+                          child: Text(
+                            '개인정보처리방침',
+                            style: TextStyle(
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12.sp,
+                              color: const Color(0xFF9A9A9A),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const TextSpan(text: '에 동의한 것으로 간주합니다.'),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 30.h), // 하단 여백
             ],
           ),
         ),
