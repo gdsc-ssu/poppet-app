@@ -56,31 +56,34 @@ class MyPagePage extends ConsumerWidget {
                       children: [
                         Image.asset('assets/images/poppet.png', width: 100.w),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '안녕하세요,',
-                                style: AppTextStyle.pretendard_18_regular,
-                              ),
-                              SizedBox(height: 4.sp),
-                              RichText(
-                                text: TextSpan(
-                                  children: [
-                                    TextSpan(
-                                      text: (loginInfo?.name ?? '사용자'),
-                                      style: AppTextStyle.pretendard_32_bold
-                                          .copyWith(color: AppColors.primary),
-                                    ),
-                                    TextSpan(
-                                      text: '님',
-                                      style: AppTextStyle.pretendard_18_regular
-                                          .copyWith(color: AppColors.darkGrey),
-                                    ),
-                                  ],
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 24.sp),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '안녕하세요,',
+                                  style: AppTextStyle.pretendard_18_regular,
                                 ),
-                              ),
-                            ],
+                                SizedBox(height: 4.sp),
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: (loginInfo?.name ?? '김준하'),
+                                        style: AppTextStyle.pretendard_32_bold
+                                            .copyWith(color: AppColors.primary),
+                                      ),
+                                      TextSpan(
+                                        text: '님',
+                                        style: AppTextStyle.pretendard_18_regular
+                                            .copyWith(color: AppColors.darkGrey),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
