@@ -120,11 +120,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // 이 credential.userIdentifier 등을 서버로 전송하여 사용자 인증 처리
     String userIdentifier =  credential.identityToken!;
     print('애플 로그인 성공: ${credential.identityToken}');
+    await SecureStorageUtils.setAccessToken(userIdentifier);
     final authResponse = await ApiService(
         DioClient.dio,
       ).loginWithApple({'accessToken': userIdentifier});
-    print(authResponse);
     state = AuthState.unauthenticated();
+    print('정보 : ${authResponse.data.name}');
+    // Process response data
+      if (authResponse.data != null && authResponse.data != null) {
+        final userName = authResponse.data.name;
+        final userInfo = UserInfo(name: userName);
+
+        // 사용자 정보 저장
+        await SecureStorageUtils.setUserName(userName);
+        _ref.read(loginInfoProvider.notifier).setLoginInfo(userInfo);
+
+        state = AuthState.authenticated(null);
+
+        if (!context.mounted) return;
+        context.go('/home');
+      }
   } catch (e) {
     print('애플 로그인 실패: $e');
     state = state.copyWith(isAppleLoading: false);

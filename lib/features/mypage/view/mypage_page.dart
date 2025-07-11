@@ -55,31 +55,33 @@ class MyPagePage extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Image.asset('assets/images/poppet.png', width: 100.w),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '안녕하세요,',
-                              style: AppTextStyle.pretendard_18_regular,
-                            ),
-                            SizedBox(height: 4.sp),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              spacing: 4.sp,
-                              children: [
-                                Text(
-                                  loginInfo?.name ?? '사용자',
-                                  style: AppTextStyle.pretendard_32_bold
-                                      .copyWith(color: AppColors.primary),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '안녕하세요,',
+                                style: AppTextStyle.pretendard_18_regular,
+                              ),
+                              SizedBox(height: 4.sp),
+                              RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: (loginInfo?.name ?? '사용자'),
+                                      style: AppTextStyle.pretendard_32_bold
+                                          .copyWith(color: AppColors.primary),
+                                    ),
+                                    TextSpan(
+                                      text: '님',
+                                      style: AppTextStyle.pretendard_18_regular
+                                          .copyWith(color: AppColors.darkGrey),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  '님',
-                                  style: AppTextStyle.pretendard_18_regular
-                                      .copyWith(color: AppColors.darkGrey),
-                                ),
-                              ],
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
