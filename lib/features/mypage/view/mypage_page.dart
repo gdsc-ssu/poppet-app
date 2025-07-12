@@ -70,7 +70,7 @@ class MyPagePage extends ConsumerWidget {
                                   text: TextSpan(
                                     children: [
                                       TextSpan(
-                                        text: (loginInfo?.name ?? '김준하'),
+                                        text: (loginInfo?.name ?? '사용자'),
                                         style: AppTextStyle.pretendard_32_bold
                                             .copyWith(color: AppColors.primary),
                                       ),
