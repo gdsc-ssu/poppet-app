@@ -1,18 +1,19 @@
 import java.util.Properties
 
+// 키스토어 속성 로드
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
+
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(keystorePropertiesFile.inputStream())
+} else {
+    throw GradleException("key.properties 파일이 존재하지 않습니다.")
 }
-
 
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-    // Firebase 플러그인 추가
     id("com.google.gms.google-services")
 }
 
@@ -28,11 +29,12 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
-        // Deprecation 경고 자세히 표시
-        freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn", "-Xlint:deprecation")
+        freeCompilerArgs = listOf(
+            "-Xopt-in=kotlin.RequiresOptIn",
+            "-Xlint:deprecation"
+        )
     }
 
-    // 경고 억제 설정
     lint {
         abortOnError = false
         checkReleaseBuilds = false
@@ -40,38 +42,37 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.pet"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 30
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        
-        // AppAuth 리디렉션 스키마 추가
         manifestPlaceholders["appAuthRedirectScheme"] = "com.example.pet"
     }
 
-    if (keystorePropertiesFile.exists()) {
-        signingConfigs {
-            create("release") {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
-            }
+    // 릴리스 키 서명 설정
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"]?.toString()
+                ?: throw GradleException("keyAlias 누락")
+            keyPassword = keystoreProperties["keyPassword"]?.toString()
+                ?: throw GradleException("keyPassword 누락")
+            storeFile = file(keystoreProperties["storeFile"]?.toString()
+                ?: throw GradleException("storeFile 누락"))
+            storePassword = keystoreProperties["storePassword"]?.toString()
+                ?: throw GradleException("storePassword 누락")
         }
     }
 
     buildTypes {
         getByName("release") {
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
@@ -80,7 +81,7 @@ flutter {
     source = "../.."
 }
 
-// Java 컴파일 태스크에 대한 옵션 추가
+// 컴파일 경고 억제
 tasks.withType<JavaCompile> {
     options.compilerArgs.addAll(listOf("-Xlint:none", "-nowarn"))
 }
